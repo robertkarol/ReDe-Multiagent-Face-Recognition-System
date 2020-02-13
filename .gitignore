@@ -1,3 +1,4 @@
-.\Source\FaceDetection\OpenCVWrapper\Debug
-.\Source\FaceDetection\OpenCVWrapper\Release
+Source/FaceDetection/OpenCVWrapper/Debug/*
+Source/FaceDetection/OpenCVWrapper/Release/*
+Binaries/Debug/*
 .vs
