@@ -74,13 +74,14 @@ class DatasetHelpers:
 
 
     @staticmethod
-    def load_images(directory):
+    def load_images(directory, as_array = False):
         images = []
         for filename in listdir(directory):
-            path_to_file = directory + filename
+            path_to_file = directory + "/" + filename
             if not path.isfile(path_to_file): continue
             image = Image.open(path_to_file)
-            images.append(asarray(image))
+            if as_array: image = asarray(image)
+            images.append(image)
         return images
 
 
