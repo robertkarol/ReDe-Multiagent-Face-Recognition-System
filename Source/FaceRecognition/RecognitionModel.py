@@ -60,6 +60,16 @@ class RecognitionModel:
         return self.predict_from_face_arrays(faces_as_array_list)
 
 
+    @staticmethod
+    def save_model_as_binary(recognition_model):
+        pass
+
+
+    @staticmethod
+    def load_model_from_binary(path_to_binary):
+        pass
+
+
     def __transform_data(self, input, output):
         input = self.__input_normalizer.transform(input) if self.__input_normalizer else input
         if self.__output_encoder:
