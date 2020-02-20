@@ -51,8 +51,13 @@ class RecognitionModel:
         return score_test
 
 
-    def predict(self):
-        pass
+    def predict_from_face_arrays(self, faces_as_array_list):
+        return self.__classification_model.predict(asarray(faces_as_array_list))
+
+
+    def predict_from_face_images(self, face_images_list):
+        faces_as_array_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in face_images_list]
+        return self.predict_from_face_arrays(faces_as_array_list)
 
 
     def __transform_data(self, input, output):
