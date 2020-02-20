@@ -5,6 +5,7 @@ from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
 from DatasetHelpers import DatasetHelpers
 from ResourceLocalizer import ResourceLocalizer
+import pickle
 
 class RecognitionModel:
 
@@ -61,13 +62,15 @@ class RecognitionModel:
 
 
     @staticmethod
-    def save_model_as_binary(recognition_model):
-        pass
+    def save_model_as_binary(recognition_model, filename):
+        with open(filename + ".pkl", "wb") as output:
+            pickle.dump(recognition_model, output, pickle.HIGHEST_PROTOCOL)
 
 
     @staticmethod
     def load_model_from_binary(path_to_binary):
-        pass
+        with open(path_to_binary + ".pkl", "rb") as input:
+            return pickle.load(input)
 
 
     def __transform_data(self, input, output):
