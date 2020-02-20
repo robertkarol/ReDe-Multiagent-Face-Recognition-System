@@ -48,7 +48,6 @@ class DatasetHelpers:
     @staticmethod
     def extract_faces_from_dataset(dataset_folder, extraction_folder, create_extraction_folder = True, single_face = False):
         extraction_folder = dataset_folder + "-extracted" if not extraction_folder else extraction_folder
-        extracted_faces = []
 
         if create_extraction_folder: mkdir(extraction_folder)
         for phase in listdir(dataset_folder):
