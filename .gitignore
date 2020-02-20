@@ -2,5 +2,7 @@ Source/FaceDetection/OpenCVWrapper/Debug/*
 Source/FaceDetection/OpenCVWrapper/Release/*
 Binaries/Debug/*
 .vs
-Source/FaceRecognition/locals/*
-Source/FaceRecognition/venv/*
+locals
+venv
+.idea
+__pycache__
