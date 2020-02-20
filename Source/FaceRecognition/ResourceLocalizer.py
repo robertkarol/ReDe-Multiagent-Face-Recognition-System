@@ -6,4 +6,4 @@ class ResourceLocalizer:
 
     @property
     def FaceNetModel(self):
-        return self.__parser['Models']['FaceNetModel']
+        return self.__parser['MODELS']['FACENET_MODEL']
