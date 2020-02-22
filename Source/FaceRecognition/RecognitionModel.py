@@ -1,4 +1,5 @@
 from keras.models import load_model
+import numpy as np
 from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
@@ -55,7 +56,12 @@ class RecognitionModel:
     def predict_from_faces_embeddings(self, faces_embeddings_list):
         faces_embeddings_list = asarray(faces_embeddings_list)
         self.__transform_data(faces_embeddings_list, asarray([]))
-        return self.__classification_model.predict(faces_embeddings_list)
+        prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
+        predictions = []
+        for instance in prediction_probabilities:
+            predicted_class = np.argmax(instance) + 1
+            predictions.append((predicted_class, instance[predicted_class - 1]))
+        return predictions
 
 
     def predict_from_faces_pixels(self, faces_pixels_list):
