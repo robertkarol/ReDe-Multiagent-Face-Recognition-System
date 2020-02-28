@@ -16,8 +16,8 @@ using namespace cv;
 typedef cv::Point2f PointFloat;
 typedef cv::Point2d PointDouble;
 
-static CascadeClassifier faceCascadeClsfr;
-static CascadeClassifier eyesCascadeClsfr;
+static CascadeClassifier faceCascadeClassifier;
+static CascadeClassifier eyesCascadeClassfier;
 static bool bEyeClassifierLoaded = false;
 
 void Convert(const Rect& rect, LV_Rect& lvRect){
@@ -28,22 +28,32 @@ void Convert(const Rect& rect, LV_Rect& lvRect){
     lvRect.angle = 0;
 }
 
-EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, const char* faceCascadePath, const char* eyesCascadePath, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle){
+EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(const char * faceCascadePath, const char * eyesCascadePath, NIErrorHandle errorHandle)
+{
+	String faceCascadeString = faceCascadePath;
+	if (!faceCascadeClassifier.load(faceCascadeString))
+	{
+		return;
+	}
+	String eyesCascadeString = eyesCascadePath;
+	if (eyesCascadePath != NULL && eyesCascadeString.length() > 1)
+	{
+		if (!eyesCascadeClassfier.load(eyesCascadeString))
+		{
+			return;
+		}
+	}
+}
+
+EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle){
     
     NIERROR error = NI_ERR_SUCCESS;
     ReturnOnPreviousError(errorHandle);
 	
-    try{
-
+    try
+	{
         NIImage source(sourceHandle);        
         NIArray1D<LV_Rect> facesRect(facesRectLV);        
-
-		//Load the face cascase classifier
-        String faceCascadeString = faceCascadePath;
-		if (!faceCascadeClsfr.load(faceCascadeString))
-		{
-			return;
-		}
 
 		//Do image conversions
         vector<Rect> faces;
@@ -54,10 +64,12 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, cons
         Mat matGray;
 		int maxWidth = matGray.rows / 2;
 		int minWidth = 15;
-		if (sourceMat.type() != CV_8UC1) {
+		if (sourceMat.type() != CV_8UC1) 
+		{
 			cvtColor(sourceMat, matGray, COLOR_BGR2GRAY);
 		}
-		else {
+		else 
+		{
 			matGray = sourceMat.clone();
 		}
 
@@ -65,16 +77,21 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, cons
         equalizeHist(matGray, matGray);
 
 		//Detect faces
-        faceCascadeClsfr.detectMultiScale(matGray, faces, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth), Size(maxWidth, maxWidth));
-        facesLV.resize(faces.size());
+        faceCascadeClassifier.detectMultiScale(matGray, faces, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth), Size(maxWidth, maxWidth));
+        
+		facesLV.resize(faces.size());
         vector<LV_Rect>::iterator fLV = facesLV.begin();
-		if (faces.size()) {
-			for (vector<Rect>::iterator f = faces.begin(); f != faces.end(); f++) {
+		if (faces.size()) 
+		{
+			for (vector<Rect>::iterator f = faces.begin(); f != faces.end(); f++) 
+			{
 				Convert(*f, *fLV++);
-				if (minWidth > f->width) {
+				if (minWidth > f->width) 
+				{
 					minWidth = f->width;
 				}
-				if (maxWidth < f->width) {
+				if (maxWidth < f->width) 
+				{
 					maxWidth = f->width;
 				}
 			}
@@ -83,16 +100,19 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, cons
 			maxWidth = static_cast<int>(maxWidth * 1.2);
 
 		}
-		else {
+		else 
+		{
 			minWidth = 15;
-			maxWidth = matGray.rows/4;
+			maxWidth = matGray.rows / 4;
 		}
         facesRect.SetArray(facesLV);
     }
-    catch (NIERROR _err){
+    catch (NIERROR _err)
+	{
         error = _err;
     }
-    catch (...){
+    catch (...)
+	{
         error = NI_ERR_OCV_USER;
     }
     ProcessNIError(error, errorHandle);

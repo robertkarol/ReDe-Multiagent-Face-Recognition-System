@@ -1,6 +1,5 @@
-
-#ifndef NIVISION_OPENCV_EXAMPLES
-#define NIVISION_OPENCV_EXAMPLES
+#ifndef OPENCV_WRAPPER
+#define OPENCV_WRAPPER
 
 #include <NIVisionExtLib.h>
 
@@ -22,6 +21,7 @@ typedef struct {
 
 #include "lv_epilog.h"
 
-EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, const char* faceCascadePath, const char* eyesCascadePath, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle);
+EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(const char* faceCascadePath, const char* eyesCascadePath, NIErrorHandle errorHandle);
+EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle);
 
 #endif
