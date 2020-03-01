@@ -53,7 +53,7 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIAr
     try
 	{
         NIImage source(sourceHandle);        
-        NIArray1D<LV_Rect> facesRect(facesRectLV);        
+        NIArray1D<LV_Rect> facesRect(facesRectLV);  
 
 		//Do image conversions
         vector<Rect> faces;
@@ -77,7 +77,7 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIAr
         equalizeHist(matGray, matGray);
 
 		//Detect faces
-        faceCascadeClassifier.detectMultiScale(matGray, faces, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth), Size(maxWidth, maxWidth));
+        faceCascadeClassifier.detectMultiScale(matGray, faces, 1.15, 4, 0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth));
         
 		facesLV.resize(faces.size());
         vector<LV_Rect>::iterator fLV = facesLV.begin();
