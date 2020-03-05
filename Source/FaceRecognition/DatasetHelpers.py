@@ -89,9 +89,9 @@ class DatasetHelpers:
         input_data, output_data = [], []
         i = 1
         for subdir in sorted(listdir(directory)):
-            path = directory + subdir + '/'
+            path = directory + '/' + subdir
             if not isdir(path): continue
-            faces = DatasetHelpers.load_images(path)
+            faces = DatasetHelpers.load_images(path, as_array=True)
             labels = [i] * len(faces)
             input_data.extend(faces)
             output_data.extend(labels)
@@ -103,5 +103,5 @@ class DatasetHelpers:
     def load_datasets(datasets_directory):
         datasets = []
         for directory in listdir(datasets_directory):
-            datasets.append(DatasetHelpers.load_single_dataset(directory))
+            datasets.append(DatasetHelpers.load_single_dataset(datasets_directory + "/" + directory))
         return datasets
