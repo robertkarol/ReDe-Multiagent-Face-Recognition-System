@@ -38,12 +38,13 @@ class RecognitionModel:
         self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
 
-    def train(self):
+    def train(self, neighbors=1):
         train_input, train_output = self.__transform_data(self.__train_input, self.__train_output)
         print(self.__train_input.shape)
         #self.__classification_model.set_params(max_iter = np.ceil(10**6 / self.__train_input.shape[0]))
-        print(max(1, int(self.__train_input.shape[0]**(1/2))))
-        self.__classification_model.set_params(n_neighbors=max(1, int(self.__train_input.shape[0]**(1/2))))
+        #print(max(1, int(self.__train_input.shape[0]**(1/2))))
+        print(neighbors)
+        self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)
 
 
