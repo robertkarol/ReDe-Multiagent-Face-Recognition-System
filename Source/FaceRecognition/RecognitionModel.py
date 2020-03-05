@@ -4,6 +4,8 @@ from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from DatasetHelpers import DatasetHelpers
 from ResourceLocalizer import ResourceLocalizer
 import pickle
@@ -13,7 +15,9 @@ class RecognitionModel:
     def __init__(self, normalize, encode_labels):
         self.__resource_localizer = ResourceLocalizer()
         self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
-        self.__classification_model = SVC(kernel='linear', probability=True)
+        #self.__classification_model = SVC(kernel='linear', probability=True)
+        #self.__classification_model = SGDClassifier()
+        self.__classification_model = KNeighborsClassifier()
         self.__input_normalizer = Normalizer(norm='l2') if normalize else None
         self.__output_encoder = LabelEncoder() if encode_labels else None
 
@@ -22,27 +26,25 @@ class RecognitionModel:
         data = load(path_to_file)
         self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
         if not is_embeddings_file:
-            embedded_train_input = []
-            for face_pixels in self.__train_input:
-                embedding = self.__get_embedding(face_pixels)
-                embedded_train_input.append(embedding)
-            embedded_train_input = asarray(embedded_train_input)
-
-            embedded_test_input = []
-            for face_pixels in self.__test_input:
-                embedding = self.__get_embedding(face_pixels)
-                embedded_test_input.append(embedding)
-            embedded_test_input = asarray(embedded_test_input)
-            self.__train_input, self.__train_output = embedded_train_input, embedded_test_input
+            self.__train_input = self.__get_embedded_dataset(self.__train_input)
+            self.__test_input = self.__get_embedded_dataset(self.__test_input)
+        print(self.__train_input)
 
 
     def load_data_from_directory(self, dataset_path):
         data = DatasetHelpers.load_datasets(dataset_path)
         self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], data[1][0], data[1][1]
+        self.__train_input = self.__get_embedded_dataset(self.__train_input)
+        self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
 
-    def train(self):
+    def train(self, neighbors=1):
         train_input, train_output = self.__transform_data(self.__train_input, self.__train_output)
+        print(self.__train_input.shape)
+        #self.__classification_model.set_params(max_iter = np.ceil(10**6 / self.__train_input.shape[0]))
+        #print(max(1, int(self.__train_input.shape[0]**(1/2))))
+        print(neighbors)
+        self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)
 
 
@@ -51,6 +53,7 @@ class RecognitionModel:
         prediction = self.__classification_model.predict(test_input)
         score_test = accuracy_score(test_output, prediction)
         return score_test
+
 
 
     def predict_from_faces_embeddings(self, faces_embeddings_list):
@@ -101,3 +104,14 @@ class RecognitionModel:
         samples = expand_dims(face_pixels, axis=0)
         embedding = self.__embeddings_model.predict(samples)
         return embedding[0]
+
+
+    def __get_embedded_dataset(self, input):
+        embedded_input = []
+
+        for face_pixels in input:
+            embedding = self.__get_embedding(face_pixels)
+            embedded_input.append(embedding)
+        embedded_input = asarray(embedded_input)
+
+        return embedded_input
