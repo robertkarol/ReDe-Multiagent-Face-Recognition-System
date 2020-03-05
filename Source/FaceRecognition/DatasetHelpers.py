@@ -6,12 +6,11 @@ from mtcnn import MTCNN
 from numpy import asarray
 
 class DatasetHelpers:
+    face_detector = MTCNN()
     @staticmethod
     def extract_faces_from_image(path_to_image, required_size = (160, 160), single_face = False):
         image_as_pixels = DatasetHelpers.image_from_path_to_pixels_array(path_to_image)
-        face_detector = MTCNN()
-
-        results = face_detector.detect_faces(image_as_pixels)
+        results = DatasetHelpers.face_detector.detect_faces(image_as_pixels)
         no_of_faces_to_extract = 1 if single_face else len(results)
         face_array_list = []
         for i in range(no_of_faces_to_extract):
