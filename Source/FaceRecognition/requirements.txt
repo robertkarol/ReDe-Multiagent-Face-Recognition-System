@@ -10,3 +10,6 @@ wheel
 setuptools==41.0.0
 scikit-learn
 configparser
+Pillow
+matplotlib
+mtcnn
