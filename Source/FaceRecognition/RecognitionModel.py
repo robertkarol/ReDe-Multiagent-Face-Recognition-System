@@ -17,7 +17,7 @@ class RecognitionModel:
         self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
         #self.__classification_model = SVC(kernel='linear', probability=True)
         #self.__classification_model = SGDClassifier()
-        self.__classification_model = KNeighborsClassifier()
+        self.__classification_model = KNeighborsClassifier(n_jobs=-1)
         self.__input_normalizer = Normalizer(norm='l2') if normalize else None
         self.__output_encoder = LabelEncoder() if encode_labels else None
 
@@ -55,9 +55,27 @@ class RecognitionModel:
         return score_test
 
 
+    def test_threshold(self, threshold):
+        test_input, test_output = self.__transform_data(self.__test_input, self.__test_output)
+        prediction_probabilities = self.predict_from_faces_embeddings(test_input, is_array=True)
+        prediction = []
+        classified = classified_correctly = 0
+        total_predictions = len(prediction_probabilities)
 
-    def predict_from_faces_embeddings(self, faces_embeddings_list):
-        faces_embeddings_list = asarray(faces_embeddings_list)
+        for i in range(total_predictions):
+            if prediction_probabilities[i][1] > threshold:
+                cls = prediction_probabilities[i][0]
+                classified += 1
+                classified_correctly += 1 if cls == test_output[i] else 0
+            else:
+                cls = -1
+            prediction.append(cls)
+
+        return classified_correctly / classified, classified / total_predictions
+
+
+    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False):
+        if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
         self.__transform_data(faces_embeddings_list, asarray([]))
         prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
         predictions = []
