@@ -22,6 +22,6 @@ typedef struct {
 #include "lv_epilog.h"
 
 EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(const char* faceCascadePath, const char* eyesCascadePath, NIErrorHandle errorHandle);
-EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle);
-EXTERN_C void NI_EXPORT NIVisOpenCV_ContainsFace(NIImageHandle sourceHandle, int8_t* containsFace, NIErrorHandle errorHandle);
+EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, int minWidth, int maxWidth, double scaleFactor, int minNeighbors, NIErrorHandle errorHandle);
+EXTERN_C void NI_EXPORT NIVisOpenCV_ContainsFace(NIImageHandle sourceHandle, double scaleFactor, int minNeighbors, int8_t* containsFace, NIErrorHandle errorHandle);
 #endif
