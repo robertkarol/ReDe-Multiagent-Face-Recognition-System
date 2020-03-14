@@ -23,5 +23,5 @@ typedef struct {
 
 EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(const char* faceCascadePath, const char* eyesCascadePath, NIErrorHandle errorHandle);
 EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, NIArrayHandle facesRectLV, NIArrayHandle eyesRectLV, NIErrorHandle errorHandle);
-
+EXTERN_C void NI_EXPORT NIVisOpenCV_ContainsFace(NIImageHandle sourceHandle, int8_t* containsFace, NIErrorHandle errorHandle);
 #endif
