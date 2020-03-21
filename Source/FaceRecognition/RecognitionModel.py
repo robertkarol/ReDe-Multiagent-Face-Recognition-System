@@ -54,14 +54,12 @@ class RecognitionModel:
         score_test = accuracy_score(test_output, prediction)
         return score_test
 
-
     def test_threshold(self, threshold):
         test_input, test_output = self.__transform_data(self.__test_input, self.__test_output)
-        prediction_probabilities = self.predict_from_faces_embeddings(test_input, is_array=True)
+        prediction_probabilities = self.predict_from_faces_embeddings(test_input, is_array=True, transform_data=False)
         prediction = []
         classified = classified_correctly = 0
         total_predictions = len(prediction_probabilities)
-
         for i in range(total_predictions):
             if prediction_probabilities[i][1] > threshold:
                 cls = prediction_probabilities[i][0]
@@ -70,13 +68,12 @@ class RecognitionModel:
             else:
                 cls = -1
             prediction.append(cls)
-
+            
         return classified_correctly / classified, classified / total_predictions
 
-
-    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False):
+    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
         if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
-        self.__transform_data(faces_embeddings_list, asarray([]))
+        if transform_data: faces_embeddings_list, _ = self.__transform_data(faces_embeddings_list, asarray([]))
         prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
         predictions = []
         for instance in prediction_probabilities:
