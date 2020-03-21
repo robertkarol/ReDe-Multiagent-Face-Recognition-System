@@ -107,6 +107,10 @@ class RecognitionModel:
             return pickle.load(input)
 
 
+    def get_embedding(self, face_image):
+        return self.__get_embedding(DatasetHelpers.image_to_pixels_array(face_image, (160, 160)))
+
+
     def __transform_data(self, input, output):
         input = self.__input_normalizer.transform(input) if self.__input_normalizer else input
         if self.__output_encoder:
