@@ -27,26 +27,44 @@ class RecognitionModel:
 
     def load_data_from_compressed(self, path_to_file, is_embeddings_file):
         data = load(path_to_file)
-        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
+        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], \
+                                                                                         data['arr_2'], data['arr_3']
         if not is_embeddings_file:
             self.__train_input = self.__get_embedded_dataset(self.__train_input)
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
         print(self.__train_input)
 
 
-    def load_data_from_directory(self, dataset_path):
+    def load_data_from_directory(self, dataset_path, append=False):
         data = DatasetHelpers.load_datasets(dataset_path)
-        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], data[1][0], data[1][1]
-        self.__train_input = self.__get_embedded_dataset(self.__train_input)
-        self.__test_input = self.__get_embedded_dataset(self.__test_input)
+        if append:
+            label_offset = self.__train_output[-1]
+            self.__train_input = np.concatenate((self.__train_input, self.__get_embedded_dataset(data[0][0])))
+            self.__test_input = np.concatenate((self.__test_input, self.__get_embedded_dataset(data[1][0])))
+            self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
+            self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
+        else:
+            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], \
+            self.__train_input = self.__get_embedded_dataset(self.__train_input)
+            self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
 
     def train(self, neighbors=1):
-        train_input, train_output = self.__transform_data(self.__train_input, self.__train_output)
-        print(self.__train_input.shape)
+        self.__neighbors = neighbors
+        self.__train(neighbors)
+
+
+    def __train(self, neighbors=1, transform_data=True):
+        train_input, train_output = self.__train_input, self.__train_output
+        if transform_data: train_input, train_output = self.__transform_data(train_input, train_output)
         if self.model_type == 'knn':
             self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)
+
+
+    def retrain_from_dataset(self, additional_dataset_path):
+        self.load_data_from_directory(additional_dataset_path, append=True)
+        self.train(neighbors=self.__neighbors)
 
 
     def test(self):
@@ -58,7 +76,7 @@ class RecognitionModel:
 
     def test_threshold(self, threshold):
         test_input, test_output = self.__transform_data(self.__test_input, self.__test_output)
-        prediction_probabilities = self.predict_from_faces_embeddings(test_input, is_array=True, transform_data=False)
+        prediction_probabilities = self.__predict_from_faces_embeddings(test_input, is_array=True, transform_data=False)
         prediction = []
         classified = classified_correctly = 0
         total_predictions = len(prediction_probabilities)
@@ -70,11 +88,15 @@ class RecognitionModel:
             else:
                 cls = -1
             prediction.append(cls)
-            
+
         return classified_correctly / classified, classified / total_predictions
 
 
-    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
+    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False):
+        return self.__predict_from_faces_embeddings(faces_embeddings_list, is_array)
+
+
+    def __predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
         if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
         if transform_data: faces_embeddings_list, _ = self.__transform_data(faces_embeddings_list, asarray([]))
         prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
@@ -91,7 +113,8 @@ class RecognitionModel:
 
 
     def predict_from_faces_images(self, face_images_list):
-        faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in face_images_list]
+        faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in
+                             face_images_list]
         return self.predict_from_faces_pixels(faces_pixels_list)
 
 
