@@ -4,7 +4,6 @@ from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
-from sklearn.linear_model import SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from DatasetHelpers import DatasetHelpers
 from ResourceLocalizer import ResourceLocalizer
@@ -12,12 +11,16 @@ import pickle
 
 class RecognitionModel:
 
-    def __init__(self, normalize, encode_labels):
+    def __init__(self, normalize, encode_labels, model_type='knn'):
         self.__resource_localizer = ResourceLocalizer()
         self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
-        #self.__classification_model = SVC(kernel='linear', probability=True)
-        #self.__classification_model = SGDClassifier()
-        self.__classification_model = KNeighborsClassifier(n_jobs=-1)
+        self.__model_type = model_type
+        if model_type == 'knn':
+            self.__classification_model = KNeighborsClassifier(n_jobs=-1)
+        elif model_type == 'svm':
+            self.__classification_model = SVC(kernel='linear', probability=True)
+        else:
+            raise ValueError("Invalid model type: " + model_type)
         self.__input_normalizer = Normalizer(norm='l2') if normalize else None
         self.__output_encoder = LabelEncoder() if encode_labels else None
 
@@ -41,10 +44,8 @@ class RecognitionModel:
     def train(self, neighbors=1):
         train_input, train_output = self.__transform_data(self.__train_input, self.__train_output)
         print(self.__train_input.shape)
-        #self.__classification_model.set_params(max_iter = np.ceil(10**6 / self.__train_input.shape[0]))
-        #print(max(1, int(self.__train_input.shape[0]**(1/2))))
-        print(neighbors)
-        self.__classification_model.set_params(n_neighbors=neighbors)
+        if self.model_type == 'knn':
+            self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)
 
 
@@ -53,6 +54,7 @@ class RecognitionModel:
         prediction = self.__classification_model.predict(test_input)
         score_test = accuracy_score(test_output, prediction)
         return score_test
+
 
     def test_threshold(self, threshold):
         test_input, test_output = self.__transform_data(self.__test_input, self.__test_output)
@@ -70,6 +72,7 @@ class RecognitionModel:
             prediction.append(cls)
             
         return classified_correctly / classified, classified / total_predictions
+
 
     def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
         if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
@@ -90,6 +93,11 @@ class RecognitionModel:
     def predict_from_faces_images(self, face_images_list):
         faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in face_images_list]
         return self.predict_from_faces_pixels(faces_pixels_list)
+
+
+    @property
+    def model_type(self):
+        return self.__model_type
 
 
     @staticmethod
