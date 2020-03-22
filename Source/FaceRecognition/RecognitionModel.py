@@ -4,7 +4,6 @@ from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
-from sklearn.linear_model import SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from DatasetHelpers import DatasetHelpers
 from ResourceLocalizer import ResourceLocalizer
@@ -12,40 +11,57 @@ import pickle
 
 class RecognitionModel:
 
-    def __init__(self, normalize, encode_labels):
+    def __init__(self, normalize, encode_labels, model_type='knn'):
         self.__resource_localizer = ResourceLocalizer()
         self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
-        #self.__classification_model = SVC(kernel='linear', probability=True)
-        #self.__classification_model = SGDClassifier()
-        self.__classification_model = KNeighborsClassifier()
+        self.__model_type = model_type
+        if model_type == 'knn':
+            self.__classification_model = KNeighborsClassifier(n_jobs=-1)
+        elif model_type == 'svm':
+            self.__classification_model = SVC(kernel='linear', probability=True)
+        else:
+            raise ValueError("Invalid model type: " + model_type)
         self.__input_normalizer = Normalizer(norm='l2') if normalize else None
         self.__output_encoder = LabelEncoder() if encode_labels else None
 
 
+    @property
+    def model_type(self):
+        return self.__model_type
+
+
     def load_data_from_compressed(self, path_to_file, is_embeddings_file):
         data = load(path_to_file)
-        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
+        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], \
+                                                                                         data['arr_2'], data['arr_3']
         if not is_embeddings_file:
             self.__train_input = self.__get_embedded_dataset(self.__train_input)
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
         print(self.__train_input)
 
 
-    def load_data_from_directory(self, dataset_path):
+    def load_data_from_directory(self, dataset_path, append=False):
         data = DatasetHelpers.load_datasets(dataset_path)
-        self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], data[1][0], data[1][1]
-        self.__train_input = self.__get_embedded_dataset(self.__train_input)
-        self.__test_input = self.__get_embedded_dataset(self.__test_input)
+        if append:
+            label_offset = self.__train_output[-1]
+            self.__train_input = np.concatenate((self.__train_input, self.__get_embedded_dataset(data[0][0])))
+            self.__test_input = np.concatenate((self.__test_input, self.__get_embedded_dataset(data[1][0])))
+            self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
+            self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
+        else:
+            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], \
+            self.__train_input = self.__get_embedded_dataset(self.__train_input)
+            self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
 
     def train(self, neighbors=1):
-        train_input, train_output = self.__transform_data(self.__train_input, self.__train_output)
-        print(self.__train_input.shape)
-        #self.__classification_model.set_params(max_iter = np.ceil(10**6 / self.__train_input.shape[0]))
-        #print(max(1, int(self.__train_input.shape[0]**(1/2))))
-        print(neighbors)
-        self.__classification_model.set_params(n_neighbors=neighbors)
-        self.__classification_model.fit(train_input, train_output)
+        self.__neighbors = neighbors
+        self.__train(neighbors)
+
+
+    def retrain_from_dataset(self, additional_dataset_path):
+        self.load_data_from_directory(additional_dataset_path, append=True)
+        self.train(neighbors=self.__neighbors)
 
 
     def test(self):
@@ -55,16 +71,26 @@ class RecognitionModel:
         return score_test
 
 
+    def test_threshold(self, threshold):
+        test_input, test_output = self.__transform_data(self.__test_input, self.__test_output)
+        prediction_probabilities = self.__predict_from_faces_embeddings(test_input, is_array=True, transform_data=False)
+        prediction = []
+        classified = classified_correctly = 0
+        total_predictions = len(prediction_probabilities)
+        for i in range(total_predictions):
+            if prediction_probabilities[i][1] > threshold:
+                cls = prediction_probabilities[i][0]
+                classified += 1
+                classified_correctly += 1 if cls == test_output[i] else 0
+            else:
+                cls = -1
+            prediction.append(cls)
 
-    def predict_from_faces_embeddings(self, faces_embeddings_list):
-        faces_embeddings_list = asarray(faces_embeddings_list)
-        self.__transform_data(faces_embeddings_list, asarray([]))
-        prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
-        predictions = []
-        for instance in prediction_probabilities:
-            predicted_class = np.argmax(instance) + 1
-            predictions.append((predicted_class, instance[predicted_class - 1]))
-        return predictions
+        return classified_correctly / classified, classified / total_predictions
+
+
+    def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False):
+        return self.__predict_from_faces_embeddings(faces_embeddings_list, is_array)
 
 
     def predict_from_faces_pixels(self, faces_pixels_list):
@@ -73,7 +99,8 @@ class RecognitionModel:
 
 
     def predict_from_faces_images(self, face_images_list):
-        faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in face_images_list]
+        faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in
+                             face_images_list]
         return self.predict_from_faces_pixels(faces_pixels_list)
 
 
@@ -87,6 +114,10 @@ class RecognitionModel:
     def load_model_from_binary(path_to_binary):
         with open(path_to_binary + ".pkl", "rb") as input:
             return pickle.load(input)
+
+
+    def get_embedding(self, face_image):
+        return self.__get_embedding(DatasetHelpers.image_to_pixels_array(face_image, (160, 160)))
 
 
     def __transform_data(self, input, output):
@@ -115,3 +146,22 @@ class RecognitionModel:
         embedded_input = asarray(embedded_input)
 
         return embedded_input
+
+
+    def __predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
+        if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
+        if transform_data: faces_embeddings_list, _ = self.__transform_data(faces_embeddings_list, asarray([]))
+        prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
+        predictions = []
+        for instance in prediction_probabilities:
+            predicted_class = np.argmax(instance) + 1
+            predictions.append((predicted_class, instance[predicted_class - 1]))
+        return predictions
+
+
+    def __train(self, neighbors=1, transform_data=True):
+        train_input, train_output = self.__train_input, self.__train_output
+        if transform_data: train_input, train_output = self.__transform_data(train_input, train_output)
+        if self.model_type == 'knn':
+            self.__classification_model.set_params(n_neighbors=neighbors)
+        self.__classification_model.fit(train_input, train_output)
