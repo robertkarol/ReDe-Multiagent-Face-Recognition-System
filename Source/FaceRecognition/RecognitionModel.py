@@ -25,6 +25,11 @@ class RecognitionModel:
         self.__output_encoder = LabelEncoder() if encode_labels else None
 
 
+    @property
+    def model_type(self):
+        return self.__model_type
+
+
     def load_data_from_compressed(self, path_to_file, is_embeddings_file):
         data = load(path_to_file)
         self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], \
@@ -52,14 +57,6 @@ class RecognitionModel:
     def train(self, neighbors=1):
         self.__neighbors = neighbors
         self.__train(neighbors)
-
-
-    def __train(self, neighbors=1, transform_data=True):
-        train_input, train_output = self.__train_input, self.__train_output
-        if transform_data: train_input, train_output = self.__transform_data(train_input, train_output)
-        if self.model_type == 'knn':
-            self.__classification_model.set_params(n_neighbors=neighbors)
-        self.__classification_model.fit(train_input, train_output)
 
 
     def retrain_from_dataset(self, additional_dataset_path):
@@ -96,17 +93,6 @@ class RecognitionModel:
         return self.__predict_from_faces_embeddings(faces_embeddings_list, is_array)
 
 
-    def __predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
-        if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
-        if transform_data: faces_embeddings_list, _ = self.__transform_data(faces_embeddings_list, asarray([]))
-        prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
-        predictions = []
-        for instance in prediction_probabilities:
-            predicted_class = np.argmax(instance) + 1
-            predictions.append((predicted_class, instance[predicted_class - 1]))
-        return predictions
-
-
     def predict_from_faces_pixels(self, faces_pixels_list):
         faces_embeddings_list = [self.__get_embedding(face_pixels) for face_pixels in faces_pixels_list]
         return self.predict_from_faces_embeddings(faces_embeddings_list)
@@ -116,11 +102,6 @@ class RecognitionModel:
         faces_pixels_list = [DatasetHelpers.image_to_pixels_array(face_image, (160, 160)) for face_image in
                              face_images_list]
         return self.predict_from_faces_pixels(faces_pixels_list)
-
-
-    @property
-    def model_type(self):
-        return self.__model_type
 
 
     @staticmethod
@@ -165,3 +146,22 @@ class RecognitionModel:
         embedded_input = asarray(embedded_input)
 
         return embedded_input
+
+
+    def __predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):
+        if not is_array: faces_embeddings_list = asarray(faces_embeddings_list)
+        if transform_data: faces_embeddings_list, _ = self.__transform_data(faces_embeddings_list, asarray([]))
+        prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
+        predictions = []
+        for instance in prediction_probabilities:
+            predicted_class = np.argmax(instance) + 1
+            predictions.append((predicted_class, instance[predicted_class - 1]))
+        return predictions
+
+
+    def __train(self, neighbors=1, transform_data=True):
+        train_input, train_output = self.__train_input, self.__train_output
+        if transform_data: train_input, train_output = self.__transform_data(train_input, train_output)
+        if self.model_type == 'knn':
+            self.__classification_model.set_params(n_neighbors=neighbors)
+        self.__classification_model.fit(train_input, train_output)
