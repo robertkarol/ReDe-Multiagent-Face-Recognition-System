@@ -1,3 +1,4 @@
+from keras.backend import set_session
 from keras.models import load_model
 import numpy as np
 from numpy import expand_dims, load, asarray
@@ -8,12 +9,19 @@ from sklearn.neighbors import KNeighborsClassifier
 from DatasetHelpers import DatasetHelpers
 from ResourceLocalizer import ResourceLocalizer
 import pickle
+import tensorflow as tf
 
 class RecognitionModel:
 
     def __init__(self, normalize, encode_labels, model_type='knn'):
         self.__resource_localizer = ResourceLocalizer()
+        session = tf.Session()
+        graph = tf.get_default_graph()
+        set_session(session)
         self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
+        self.__embeddings_model._make_predict_function()
+        self.__graph = graph
+        self.__session = session
         self.__model_type = model_type
         if model_type == 'knn':
             self.__classification_model = KNeighborsClassifier(n_jobs=-1)
@@ -31,7 +39,6 @@ class RecognitionModel:
 
 
     def load_data_from_compressed(self, path_to_file, is_embeddings_file):
-        #TODO: Update to add append mode
         data = load(path_to_file)
         self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], \
                                                                                          data['arr_2'], data['arr_3']
@@ -43,10 +50,6 @@ class RecognitionModel:
 
     def load_data_from_directory(self, dataset_path, append=False):
         data = DatasetHelpers.load_datasets(dataset_path)
-        self.set_data_from_preloaded_directory(data, append)
-
-
-    def set_data_from_preloaded_directory(self, data, append=False):
         if append:
             label_offset = self.__train_output[-1]
             self.__train_input = np.concatenate((self.__train_input, self.__get_embedded_dataset(data[0][0])))
@@ -54,7 +57,8 @@ class RecognitionModel:
             self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
             self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
         else:
-            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], data[1][0], data[1][1]
+            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], \
+                                                                                             data[1][0], data[1][1]
             self.__train_input = self.__get_embedded_dataset(self.__train_input)
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
@@ -118,7 +122,14 @@ class RecognitionModel:
     @staticmethod
     def load_model_from_binary(path_to_binary):
         with open(path_to_binary + ".pkl", "rb") as input:
-            return pickle.load(input)
+            session = tf.Session()
+            graph = tf.get_default_graph()
+            set_session(session)
+            model = pickle.load(input)
+            model.__embeddings_model._make_predict_function()
+            model.__graph = graph
+            model.__session = session
+            return model
 
 
     def get_embedding(self, face_image):
@@ -138,7 +149,9 @@ class RecognitionModel:
         mean, std = face_pixels.mean(), face_pixels.std()
         face_pixels = (face_pixels - mean) / std
         samples = expand_dims(face_pixels, axis=0)
-        embedding = self.__embeddings_model.predict(samples)
+        set_session(self.__session)
+        with self.__graph.as_default():
+            embedding = self.__embeddings_model.predict(samples)
         return embedding[0]
 
 
