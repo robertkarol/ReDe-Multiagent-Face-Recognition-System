@@ -31,6 +31,7 @@ class RecognitionModel:
 
 
     def load_data_from_compressed(self, path_to_file, is_embeddings_file):
+        #TODO: Update to add append mode
         data = load(path_to_file)
         self.__train_input, self.__train_output, self.__test_input, self.__test_output = data['arr_0'], data['arr_1'], \
                                                                                          data['arr_2'], data['arr_3']
@@ -42,6 +43,10 @@ class RecognitionModel:
 
     def load_data_from_directory(self, dataset_path, append=False):
         data = DatasetHelpers.load_datasets(dataset_path)
+        self.set_data_from_preloaded_directory(data, append)
+
+
+    def set_data_from_preloaded_directory(self, data, append=False):
         if append:
             label_offset = self.__train_output[-1]
             self.__train_input = np.concatenate((self.__train_input, self.__get_embedded_dataset(data[0][0])))
@@ -49,19 +54,19 @@ class RecognitionModel:
             self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
             self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
         else:
-            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], \
+            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], data[1][0], data[1][1]
             self.__train_input = self.__get_embedded_dataset(self.__train_input)
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
 
     def train(self, neighbors=1):
         self.__neighbors = neighbors
-        self.__train(neighbors)
+        self.__train(neighbors=neighbors)
 
 
     def retrain_from_dataset(self, additional_dataset_path):
         self.load_data_from_directory(additional_dataset_path, append=True)
-        self.train(neighbors=self.__neighbors)
+        self.__train()
 
 
     def test(self):
@@ -159,9 +164,9 @@ class RecognitionModel:
         return predictions
 
 
-    def __train(self, neighbors=1, transform_data=True):
+    def __train(self, neighbors=-1, transform_data=True):
         train_input, train_output = self.__train_input, self.__train_output
         if transform_data: train_input, train_output = self.__transform_data(train_input, train_output)
-        if self.model_type == 'knn':
+        if neighbors != -1:
             self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)
