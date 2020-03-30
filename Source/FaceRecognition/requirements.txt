@@ -13,3 +13,4 @@ configparser
 Pillow
 matplotlib
 mtcnn
+spade
