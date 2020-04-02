@@ -5,6 +5,7 @@ from matplotlib import pyplot
 from mtcnn import MTCNN
 from numpy import asarray
 
+
 class DatasetHelpers:
     face_detector = MTCNN()
     @staticmethod
@@ -24,7 +25,6 @@ class DatasetHelpers:
 
         return face_array_list
 
-
     @staticmethod
     def extract_faces_from_directory(processed_folder, extraction_folder = None, extracted_face_file_prefix ="face",
                                      face_file_extension =".jpg", single_face = False):
@@ -36,53 +36,56 @@ class DatasetHelpers:
             face_array_list = DatasetHelpers.extract_faces_from_image(path, single_face=single_face)
             if extraction_folder:
                 for face_array in face_array_list:
-                    pyplot.imsave(extraction_folder + "/" + extracted_face_file_prefix + str(i) + face_file_extension, face_array)
+                    pyplot.imsave(extraction_folder + "/" + extracted_face_file_prefix + str(i) +
+                                  face_file_extension, face_array)
                     i += 1
             else:
                 extracted_faces.extend(face_array_list)
 
-        if not extraction_folder: return extracted_faces
-
+        if not extraction_folder:
+            return extracted_faces
 
     @staticmethod
-    def extract_faces_from_dataset(dataset_folder, extraction_folder, create_extraction_folder = True, single_face = False):
+    def extract_faces_from_dataset(dataset_folder, extraction_folder, create_extraction_folder=True, single_face=False):
         extraction_folder = dataset_folder + "-extracted" if not extraction_folder else extraction_folder
 
-        if create_extraction_folder: mkdir(extraction_folder)
+        if create_extraction_folder:
+            mkdir(extraction_folder)
         for phase in listdir(dataset_folder):
-            if create_extraction_folder: mkdir(extraction_folder + "/" + phase)
+            if create_extraction_folder:
+                mkdir(extraction_folder + "/" + phase)
             for subject in listdir(dataset_folder + "/" + phase):
-                if create_extraction_folder: mkdir(extraction_folder + "/" + phase + "/" + subject)
+                if create_extraction_folder:
+                    mkdir(extraction_folder + "/" + phase + "/" + subject)
                 DatasetHelpers.extract_faces_from_directory(dataset_folder + "/" + phase + "/" + subject,
                                                             extraction_folder + "/" + phase + "/" + subject,
                                                             single_face=single_face)
 
-
     @staticmethod
-    def image_from_path_to_pixels_array(path_to_image, required_size = None):
+    def image_from_path_to_pixels_array(path_to_image, required_size=None):
         image = Image.open(path_to_image)
 
         return DatasetHelpers.image_to_pixels_array(image, required_size)
 
-
     @staticmethod
-    def image_to_pixels_array(image, required_size = None):
+    def image_to_pixels_array(image, required_size=None):
         image = image.convert('RGB')
-        if required_size: image = image.resize(required_size)
+        if required_size:
+            image = image.resize(required_size)
         return asarray(image)
 
-
     @staticmethod
-    def load_images(directory, as_array = False):
+    def load_images(directory, as_array=False):
         images = []
         for filename in listdir(directory):
             path_to_file = directory + "/" + filename
-            if not path.isfile(path_to_file): continue
+            if not path.isfile(path_to_file):
+                continue
             image = Image.open(path_to_file)
-            if as_array: image = asarray(image)
+            if as_array:
+                image = asarray(image)
             images.append(image)
         return images
-
 
     @staticmethod
     def load_single_dataset(directory, split_chunks=1):
@@ -107,7 +110,6 @@ class DatasetHelpers:
             start = stop
             stop = min(stop + chunk_size, dataset_size)
         return loaded_dataset[0] if split_chunks == 1 else loaded_dataset
-
 
     @staticmethod
     def load_datasets(datasets_directory, split_chunks=1):

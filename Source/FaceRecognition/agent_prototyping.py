@@ -5,13 +5,13 @@ import time
 from concurrent import futures
 import asyncio
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, OneShotBehaviour
+from spade.behaviour import CyclicBehaviour
 
 from DatasetHelpers import DatasetHelpers
 from RecognitionModel import RecognitionModel
 
-start_time = None # start_time - time when the first agent is done loading a model and starts resolving
-end_time = None # end_time - time when the last running agent is done
+start_time = None  # start_time - time when the first agent is done loading a model and starts resolving
+end_time = None  # end_time - time when the last running agent is done
 
 
 class Blackboard:
@@ -25,6 +25,7 @@ class Blackboard:
     agent5 = []
     results = []
     # TODO: use deque instead of lists for the real blackboard
+
     def __init__(self):
         images_to_predict = []
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/robi'))
@@ -217,7 +218,8 @@ class ControlAgent(Agent):
 
         def dequeue_requests(self, amount=-1):
             req = []
-            if amount == -1: amount = self.__outer_ref.interface_server.requests.qsize()
+            if amount == -1:
+                amount = self.__outer_ref.interface_server.requests.qsize()
 
             try:
                 while amount > 0:
@@ -238,7 +240,7 @@ class ControlAgent(Agent):
                     await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
-                #TODO: Add data for agents and retrieve results to send back
+                # TODO: Add data for agents and retrieve results to send back
                 self.__outer_ref.blackboard.results.extend(requests)  # for now just put
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 

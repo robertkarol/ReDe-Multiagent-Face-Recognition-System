@@ -1,4 +1,6 @@
 import configparser
+
+
 class ResourceLocalizer:
     def __init__(self):
         self.__parser = configparser.ConfigParser()
