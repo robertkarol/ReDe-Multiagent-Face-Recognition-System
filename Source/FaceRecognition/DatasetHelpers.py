@@ -9,7 +9,7 @@ from numpy import asarray
 class DatasetHelpers:
     face_detector = MTCNN()
     @staticmethod
-    def extract_faces_from_image(path_to_image, required_size = (160, 160), single_face = False):
+    def extract_faces_from_image(path_to_image, required_size=(160, 160), single_face=False):
         image_as_pixels = DatasetHelpers.image_from_path_to_pixels_array(path_to_image)
         results = DatasetHelpers.face_detector.detect_faces(image_as_pixels)
         no_of_faces_to_extract = 1 if single_face else len(results)
@@ -26,8 +26,8 @@ class DatasetHelpers:
         return face_array_list
 
     @staticmethod
-    def extract_faces_from_directory(processed_folder, extraction_folder = None, extracted_face_file_prefix ="face",
-                                     face_file_extension =".jpg", single_face = False):
+    def extract_faces_from_directory(processed_folder, extraction_folder=None, extracted_face_file_prefix="face",
+                                     face_file_extension=".jpg", single_face=False):
         i = 1
         extracted_faces = []
 
@@ -100,7 +100,8 @@ class DatasetHelpers:
             input_data, output_data = [], []
             for subdir in dataset_dir[start:stop]:
                 path = directory + '/' + subdir
-                if not isdir(path): continue
+                if not isdir(path):
+                    continue
                 faces = DatasetHelpers.load_images(path, as_array=True)
                 labels = [i] * len(faces)
                 input_data.extend(faces)
