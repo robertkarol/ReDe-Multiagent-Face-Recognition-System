@@ -126,8 +126,8 @@ class InterfaceServer(multiprocessing.Process):
     #TODO: Create TCP streams
     def __init__(self, request: multiprocessing.Queue, responses: multiprocessing.Queue):
         super().__init__()
-        self.__request = request
-        self.__responses = responses
+        self.request = request
+        self.responses = responses
         self.__loop = None
 
     async def requests_handler(self):
@@ -138,7 +138,7 @@ class InterfaceServer(multiprocessing.Process):
     async def responses_handler(self):
         while True:
             print("Processing responses...")
-            await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            await self.__loop.run_in_executor(None, lambda: self.responses.get())
 
     def run(self):
         executor = futures.ThreadPoolExecutor(max_workers=4)
