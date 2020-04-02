@@ -24,7 +24,7 @@ class Blackboard:
     agent4 = []
     agent5 = []
     results = []
-    # TODO: use deque istead of lists for the real blackboard
+    # TODO: use deque instead of lists for the real blackboard
     def __init__(self):
         images_to_predict = []
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/robi'))
@@ -137,6 +137,7 @@ class InterfaceServer(multiprocessing.Process):
             await req_server.serve_forever()
 
     async def requests_handler(self, reader, writer):
+        # TODO: Add closing stream logic
         while True:
             print("Processing requests...")
             data_len = int.from_bytes(await reader.read(4), byteorder='big')
@@ -147,6 +148,7 @@ class InterfaceServer(multiprocessing.Process):
         while True:
             print("Processing responses...")
             r = await self.__loop.run_in_executor(None, lambda: self.responses.get())
+            # TODO: Retain the streams and send the answer to the proper stream to the detection agent
             print(f"Sending: {r}")
 
     def run(self):
@@ -236,8 +238,8 @@ class ControlAgent(Agent):
                     await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
-                #TODO: Add data for agents
-                self.__outer_ref.blackboard.results.extend(requests)
+                #TODO: Add data for agents and retrieve results to send back
+                self.__outer_ref.blackboard.results.extend(requests)  # for now just put
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
         async def on_end(self):
