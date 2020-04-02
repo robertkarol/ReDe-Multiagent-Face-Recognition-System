@@ -85,23 +85,33 @@ class DatasetHelpers:
 
 
     @staticmethod
-    def load_single_dataset(directory):
-        input_data, output_data = [], []
-        i = 1
-        for subdir in sorted(listdir(directory)):
-            path = directory + '/' + subdir
-            if not isdir(path): continue
-            faces = DatasetHelpers.load_images(path, as_array=True)
-            labels = [i] * len(faces)
-            input_data.extend(faces)
-            output_data.extend(labels)
-            i += 1
-        return (asarray(input_data), asarray(output_data))
+    def load_single_dataset(directory, split_chunks=1):
+        loaded_dataset = []
+        dataset_dir = sorted(listdir(directory))
+        dataset_size = len(dataset_dir)
+        chunk_size = dataset_size // split_chunks
+        start = 0
+        stop = chunk_size
+        while start < dataset_size:
+            i = 1
+            input_data, output_data = [], []
+            for subdir in dataset_dir[start:stop]:
+                path = directory + '/' + subdir
+                if not isdir(path): continue
+                faces = DatasetHelpers.load_images(path, as_array=True)
+                labels = [i] * len(faces)
+                input_data.extend(faces)
+                output_data.extend(labels)
+                i += 1
+            loaded_dataset.append((asarray(input_data), asarray(output_data)))
+            start = stop
+            stop = min(stop + chunk_size, dataset_size)
+        return loaded_dataset[0] if split_chunks == 1 else loaded_dataset
 
 
     @staticmethod
-    def load_datasets(datasets_directory):
+    def load_datasets(datasets_directory, split_chunks=1):
         datasets = []
         for directory in listdir(datasets_directory):
-            datasets.append(DatasetHelpers.load_single_dataset(datasets_directory + "/" + directory))
+            datasets.append(DatasetHelpers.load_single_dataset(datasets_directory + "/" + directory, split_chunks))
         return datasets
