@@ -1,5 +1,6 @@
 # DISCLAIMER: This code is a bit ugly
 import multiprocessing
+import queue
 import time
 from concurrent import futures
 import asyncio
@@ -9,8 +10,8 @@ from spade.behaviour import CyclicBehaviour, OneShotBehaviour
 from DatasetHelpers import DatasetHelpers
 from RecognitionModel import RecognitionModel
 
-start_time = None  # start_time - time when the first agent is done loading a model and starts resolving
-end_time = None  # end_time - time when the last running agent is done
+start_time = None # start_time - time when the first agent is done loading a model and starts resolving
+end_time = None # end_time - time when the last running agent is done
 
 
 class Blackboard:
@@ -23,7 +24,7 @@ class Blackboard:
     agent4 = []
     agent5 = []
     results = []
-    #TODO: use deque maybe
+    # TODO: use deque istead of lists for the real blackboard
     def __init__(self):
         images_to_predict = []
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/robi'))
@@ -123,30 +124,38 @@ class RecognitionAgent(Agent):
 
 
 class InterfaceServer(multiprocessing.Process):
-    #TODO: Create TCP streams
-    def __init__(self, request: multiprocessing.Queue, responses: multiprocessing.Queue):
+    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue):
         super().__init__()
-        self.request = request
+        self.requests = requests
         self.responses = responses
         self.__loop = None
 
-    async def requests_handler(self):
+    async def start_requests_server(self):
+        req_server = await asyncio.start_server(
+            self.requests_handler, '127.0.0.1', 8888)
+        async with req_server:
+            await req_server.serve_forever()
+
+    async def requests_handler(self, reader, writer):
         while True:
             print("Processing requests...")
-            await asyncio.sleep(0.5)
+            data_len = int.from_bytes(await reader.read(4), byteorder='big')
+            data = await reader.read(data_len)
+            self.requests.put(data.decode())
 
     async def responses_handler(self):
         while True:
             print("Processing responses...")
-            await self.__loop.run_in_executor(None, lambda: self.responses.get())
+            r = await self.__loop.run_in_executor(None, lambda: self.responses.get())
+            print(f"Sending: {r}")
 
     def run(self):
         executor = futures.ThreadPoolExecutor(max_workers=4)
         self.__loop = asyncio.get_event_loop()
         self.__loop.set_default_executor(executor)
         try:
-            asyncio.ensure_future(self.requests_handler())
             asyncio.ensure_future(self.responses_handler())
+            asyncio.ensure_future(self.start_requests_server())
             self.__loop.run_forever()
         except Exception:
             pass
@@ -155,7 +164,7 @@ class InterfaceServer(multiprocessing.Process):
 
 
 class ControlAgent(Agent):
-    class MonitoringBehavior(CyclicBehaviour):
+    class ResultsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref = outer_ref
@@ -163,7 +172,7 @@ class ControlAgent(Agent):
             self.__loop.set_default_executor(executor)
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting the monitoring . . .")
+            print(f"{self.__outer_ref.jid} starting monitoring results . . .")
             global start_time
             if not start_time:
                 start_time = time.time()
@@ -173,7 +182,7 @@ class ControlAgent(Agent):
                 self.__outer_ref.interface_server.responses.put(d)
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} polling. . .")
+            print(f"{self.__outer_ref.jid} polling for results. . .")
             data = self.__outer_ref.blackboard.poll_results()
             if len(data) == 0:
                 if recog_ag_count == 0:
@@ -181,15 +190,61 @@ class ControlAgent(Agent):
                 else:
                     await asyncio.sleep(0.5)
             else:
-                print(f"{self.__outer_ref.jid} starting resolving. . .")
+                print(f"{self.__outer_ref.jid} starting resolving results. . .")
                 await self.__loop.run_in_executor(None, lambda: self.enqueue_data(data))
-                print(f"{self.__outer_ref.jid} done resolving . . .")
+                print(f"{self.__outer_ref.jid} done resolving results. . .")
 
         async def on_end(self):
             global end_time, start_time
             end_time = time.time()
             print(end_time - start_time)
-            print(f"{self.__outer_ref.jid} ending the monitoring . . .")
+            print(f"{self.__outer_ref.jid} ending monitoring results. . .")
+
+    class RequestsMonitoringBehavior(CyclicBehaviour):
+        def __init__(self, outer_ref):
+            super().__init__()
+            self.__outer_ref = outer_ref
+            self.__loop = asyncio.get_event_loop()
+            self.__loop.set_default_executor(executor)
+
+        async def on_start(self):
+            print(f"{self.__outer_ref.jid} starting monitoring requests. . .")
+            global start_time
+            if not start_time:
+                start_time = time.time()
+
+        def dequeue_requests(self, amount=-1):
+            req = []
+            if amount == -1: amount = self.__outer_ref.interface_server.requests.qsize()
+
+            try:
+                while amount > 0:
+                    req.append(self.__outer_ref.interface_server.requests.get_nowait())
+                    amount -= 1
+            except queue.Empty:
+                pass
+            finally:
+                return req
+
+        async def run(self):
+            print(f"{self.__outer_ref.jid} waiting for requests. . .")
+            requests = await self.__loop.run_in_executor(None, lambda: self.dequeue_requests())
+            if len(requests) == 0:
+                if recog_ag_count == 0:
+                    self.kill()
+                else:
+                    await asyncio.sleep(1)
+            else:
+                print(f"{self.__outer_ref.jid} starting resolving requests. . .")
+                #TODO: Add data for agents
+                self.__outer_ref.blackboard.results.extend(requests)
+                print(f"{self.__outer_ref.jid} done resolving requests. . .")
+
+        async def on_end(self):
+            global end_time, start_time
+            end_time = time.time()
+            print(end_time-start_time)
+            print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
 
     def __init__(self, jid, password, blackboard: Blackboard, interface_server: InterfaceServer, verify_security=False):
         self.jid = jid
@@ -200,8 +255,10 @@ class ControlAgent(Agent):
 
     async def setup(self):
         print("Agent starting . . .")
-        b = self.MonitoringBehavior(self)
-        self.add_behaviour(b)
+        b1 = self.ResultsMonitoringBehavior(self)
+        b2 = self.RequestsMonitoringBehavior(self)
+        self.add_behaviour(b1)
+        self.add_behaviour(b2)
 
 
 if __name__ == "__main__":
