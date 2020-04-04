@@ -18,13 +18,12 @@ class Blackboard:
     '''
     Mock blackboard. Suppose we have uniform amount of "requests" for each agent
     '''
-    agent1 = []
-    agent2 = []
-    agent3 = []
-    agent4 = []
-    agent5 = []
     results = []
     # TODO: use deque instead of lists for the real blackboard
+
+    def __fake_add_agent_to_respond(self, agent_images):
+        for i in range(len(agent_images)):
+            agent_images[i] = (-1, agent_images[i])
 
     def __init__(self):
         images_to_predict = []
@@ -37,27 +36,32 @@ class Blackboard:
         self.agent3 = images_to_predict[:] * 20
         self.agent4 = images_to_predict[:] * 20
         self.agent5 = images_to_predict[:] * 20
+        self.__fake_add_agent_to_respond(self.agent1)
+        self.__fake_add_agent_to_respond(self.agent2)
+        self.__fake_add_agent_to_respond(self.agent3)
+        self.__fake_add_agent_to_respond(self.agent4)
+        self.__fake_add_agent_to_respond(self.agent5)
 
     def poll(self, agent, amount):
         if agent == 1:
-            dt = self.agent1[-1 - amount:-1]
-            del self.agent1[-1 - amount:-1]
+            dt = self.agent1[-amount:]
+            del self.agent1[-amount:]
             return dt
         if agent == 2:
-            dt = self.agent2[-1 - amount:-1]
-            del self.agent2[-1 - amount:-1]
+            dt = self.agent2[-amount:]
+            del self.agent2[-amount:]
             return dt
         if agent == 3:
-            dt = self.agent3[-1 - amount:-1]
-            del self.agent3[-1 - amount:-1]
+            dt = self.agent3[-amount:]
+            del self.agent3[-amount:]
             return dt
         if agent == 4:
-            dt = self.agent4[-1 - amount:-1]
-            del self.agent4[-1 - amount:-1]
+            dt = self.agent4[-amount:]
+            del self.agent4[-amount:]
             return dt
         if agent == 5:
-            dt = self.agent5[-1 - amount:-1]
-            del self.agent5[-1 - amount:-1]
+            dt = self.agent5[-amount:]
+            del self.agent5[-amount:]
             return dt
 
     def poll_results(self, amount=-1):
@@ -65,8 +69,8 @@ class Blackboard:
             dt = self.results
             self.results = []
             return dt
-        dt = self.results[-1 - amount:-1]
-        del self.results[-1 - amount:-1]
+        dt = self.results[-amount:]
+        del self.results[-amount:]
         return dt
 
 
@@ -98,9 +102,15 @@ class RecognitionAgent(Agent):
                 # TODO: Real behavior would be sleeping for a while before polling again
                 self.kill()
                 return
+            ag = []
+            for i, d in enumerate(data):
+                ag.append(d[0])
+                data[i] = d[1]
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             result = await self.__loop.run_in_executor(None, lambda: self.__model.predict_from_faces_images(data))
-            self.__outer_ref.blackboard.results.append(result)
+            for i, r in enumerate(result):
+                result[i] = (ag[i], r)
+            self.__outer_ref.blackboard.results.extend(result)
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
@@ -130,6 +140,8 @@ class InterfaceServer(multiprocessing.Process):
         self.requests = requests
         self.responses = responses
         self.__loop = None
+        self.__conn = {}
+        self.processed = 0
 
     async def start_requests_server(self):
         req_server = await asyncio.start_server(
@@ -138,19 +150,33 @@ class InterfaceServer(multiprocessing.Process):
             await req_server.serve_forever()
 
     async def requests_handler(self, reader, writer):
-        # TODO: Add closing stream logic
+        current_conn = len(self.__conn.keys())
+        self.__conn[current_conn] = writer
         while True:
             print("Processing requests...")
             data_len = int.from_bytes(await reader.read(4), byteorder='big')
+            if data_len == 0:
+                break
             data = await reader.read(data_len)
-            self.requests.put(data.decode())
+            self.requests.put((current_conn, data.decode()))
+        del self.__conn[current_conn]
+        writer.close()
+        print("Ending processing requests...")
 
     async def responses_handler(self):
         while True:
             print("Processing responses...")
-            r = await self.__loop.run_in_executor(None, lambda: self.responses.get())
-            # TODO: Retain the streams and send the answer to the proper stream to the detection agent
-            print(f"Sending: {r}")
+            current_conn, message = await self.__loop.run_in_executor(None, lambda: self.responses.get())
+            if current_conn < 0:
+                self.processed += 1
+                print(self.processed)
+                continue  # ignoring fake data
+            writer = self.__conn[current_conn]
+            data = message.encode()
+            writer.write(len(data).to_bytes(4, 'big'))
+            writer.write(data)
+            await writer.drain()
+            print(f"Sending: {message}")
 
     def run(self):
         executor = futures.ThreadPoolExecutor(max_workers=4)
@@ -191,7 +217,7 @@ class ControlAgent(Agent):
                 if recog_ag_count == 0:
                     self.kill()
                 else:
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
                 await self.__loop.run_in_executor(None, lambda: self.enqueue_data(data))
@@ -274,11 +300,11 @@ if __name__ == "__main__":
     recog_ag_count = 5
 
     ctrl = ControlAgent("robertkarol-ctrl1@404.city", "MeMeS-4TheWin", blackboard, server)
-    ag1 = RecognitionAgent("robertkarol-rec1@404.city", "MeMeS-4TheWin", blackboard, 1, model='partial2')
-    ag2 = RecognitionAgent("robertkarol-rec2@404.city", "MeMeS-4TheWin", blackboard, 2, model='partial2')
-    ag3 = RecognitionAgent("robertkarol-rec3@404.city", "MeMeS-4TheWin", blackboard, 3, model='partial3')
-    ag4 = RecognitionAgent("robertkarol-rec4@404.city", "MeMeS-4TheWin", blackboard, 4, model='partial4')
-    ag5 = RecognitionAgent("robertkarol-rec5@404.city", "MeMeS-4TheWin", blackboard, 5, model='partial5')
+    ag1 = RecognitionAgent("robertkarol-rec1@404.city", "MeMeS-4TheWin", blackboard, 1, model='locals/partial2')
+    ag2 = RecognitionAgent("robertkarol-rec2@404.city", "MeMeS-4TheWin", blackboard, 2, model='locals/partial2')
+    ag3 = RecognitionAgent("robertkarol-rec3@404.city", "MeMeS-4TheWin", blackboard, 3, model='locals/partial3')
+    ag4 = RecognitionAgent("robertkarol-rec4@404.city", "MeMeS-4TheWin", blackboard, 4, model='locals/partial4')
+    ag5 = RecognitionAgent("robertkarol-rec5@404.city", "MeMeS-4TheWin", blackboard, 5, model='locals/partial5')
 
     server.start()
     ctrl.start()
