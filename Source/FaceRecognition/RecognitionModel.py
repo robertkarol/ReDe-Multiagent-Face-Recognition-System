@@ -55,8 +55,8 @@ class RecognitionModel:
             self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
             self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
         else:
-            self.__train_input, self.__train_output, self.__test_input, self.__test_output = data[0][0], data[0][1], \
-                                                                                             data[1][0], data[1][1]
+            self.__train_input, self.__train_output  = data[0][0], data[0][1]
+            self.__test_input, self.__test_output = data[1][0], data[1][1]
             self.__train_input = self.__get_embedded_dataset(self.__train_input)
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
