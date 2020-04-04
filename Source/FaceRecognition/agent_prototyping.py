@@ -13,7 +13,6 @@ from RecognitionModel import RecognitionModel
 start_time = None  # start_time - time when the first agent is done loading a model and starts resolving
 end_time = None  # end_time - time when the last running agent is done
 
-
 class Blackboard:
     '''
     Mock blackboard. Suppose we have uniform amount of "requests" for each agent
@@ -212,7 +211,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling for results. . .")
-            data = self.__outer_ref.blackboard.poll_results()
+            data = self.__outer_ref.blackboard.poll_results(20)
             if len(data) == 0:
                 if recog_ag_count == 0:
                     self.kill()
@@ -258,7 +257,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
-            requests = await self.__loop.run_in_executor(None, lambda: self.dequeue_requests())
+            requests = await self.__loop.run_in_executor(None, lambda: self.dequeue_requests(20))
             if len(requests) == 0:
                 if recog_ag_count == 0:
                     self.kill()
