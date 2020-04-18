@@ -17,7 +17,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling for results. . .")
-            data = self.__outer_ref.blackboard.poll_results(20)
+            data = self.__outer_ref.blackboard.get_recognition_results(20)
             if len(data) == 0:
                 await asyncio.sleep(1)
             else:
