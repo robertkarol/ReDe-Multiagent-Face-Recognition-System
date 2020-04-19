@@ -3,7 +3,6 @@ from Server.InterfaceServer import InterfaceServer
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 import asyncio
-import queue
 
 
 class ControlAgent(Agent):
@@ -36,20 +35,6 @@ class ControlAgent(Agent):
 
         async def on_start(self):
             print(f"{self.__outer_ref.jid} starting monitoring requests. . .")
-
-        def dequeue_requests(self, amount=-1):
-            req = []
-            if amount == -1:
-                amount = self.__outer_ref.interface_server.requests.qsize()
-
-            try:
-                while amount > 0:
-                    req.append(self.__outer_ref.interface_server.requests.get_nowait())
-                    amount -= 1
-            except queue.Empty:
-                pass
-            finally:
-                return req
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
