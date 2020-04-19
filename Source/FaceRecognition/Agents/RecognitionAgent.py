@@ -32,6 +32,7 @@ class RecognitionAgent(Agent):
                 return
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             requesting_agents, faces = self.__unwrap_requests(data)
+            # TODO: Add outcome gerneration if requested so
             results = await self.__outer_ref.loop.run_in_executor(None,
                                                                   lambda: self.__model.predict_from_faces_images(faces))
             self.__outer_ref.blackboard.publish_recognition_results(self.__wrap_results(requesting_agents, results))
@@ -45,7 +46,7 @@ class RecognitionAgent(Agent):
             faces = []
             for i, req in enumerate(raw_data):
                 agents.append(req[0])
-                faces.append(req[1])
+                faces.append(req[1].face_image)
             return agents, faces
 
         def __wrap_results(self, agents, raw_results):

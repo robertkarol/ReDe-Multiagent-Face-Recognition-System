@@ -1,6 +1,7 @@
 import pickle
 
 from Domain.RecognitionRequest import RecognitionRequest
+from Domain.RecognitionResponse import RecognitionResponse
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
 from spade.agent import Agent
@@ -25,10 +26,10 @@ class ControlAgent(Agent):
                 await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
-                #TODO: threshold probability and build response
-                data = pickle.dumps(data)
+                # TODO: threshold probability if it should generate outcome
+                response = RecognitionResponse.serialize(RecognitionResponse(data[1][0], data[1][1]))
                 await self.__outer_ref.loop.run_in_executor(None,
-                                            lambda: self.__outer_ref.interface_server.enqueue_responses(data))
+                                            lambda: self.__outer_ref.interface_server.enqueue_responses(data[0], response))
                 print(f"{self.__outer_ref.jid} done resolving results. . .")
 
         async def on_end(self):
@@ -52,10 +53,10 @@ class ControlAgent(Agent):
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
-                    recognition_request = RecognitionRequest.deserialize_request(request[1])
+                    recognition_request = RecognitionRequest.deserialize(request[1])
                     print(recognition_request)
                     self.__outer_ref.blackboard.publish_recognition_request(recognition_request.detection_location,
-                                                                    (request[0], recognition_request.face_image))
+                                                                    (request[0], recognition_request))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
         async def on_end(self):
