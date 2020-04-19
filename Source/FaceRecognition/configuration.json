@@ -1,0 +1,51 @@
+{
+  "recognition-agents" : [
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "location-to-serve" : "Arad",
+      "model-basename" : "partial2",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "location-to-serve" : "Cluj",
+      "model-basename" : "partial2",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "location-to-serve" : "Timisoara",
+      "model-basename" : "partial3",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "location-to-serve" : "Oradea",
+      "model-basename" : "partial4",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "location-to-serve" : "Alba Iulia",
+      "model-basename" : "partial5",
+      "model-directory" : "./locals"
+    }
+  ],
+  "control-agents" : [
+  {
+      "agent-name" : "robertkarol-ctrl1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city"
+  }
+  ]
+}
