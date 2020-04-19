@@ -1,3 +1,5 @@
+import pickle
+
 from Domain.RecognitionRequest import RecognitionRequest
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
@@ -23,6 +25,8 @@ class ControlAgent(Agent):
                 await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
+                #TODO: threshold probability and build response
+                data = pickle.dumps(data)
                 await self.__outer_ref.loop.run_in_executor(None,
                                             lambda: self.__outer_ref.interface_server.enqueue_responses(data))
                 print(f"{self.__outer_ref.jid} done resolving results. . .")

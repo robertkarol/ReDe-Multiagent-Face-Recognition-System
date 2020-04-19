@@ -29,7 +29,6 @@ class Connection:
         return data
 
     async def write_data(self, data):
-        data = pickle.dumps(data)
         self.__writer_stream.write(len(data).to_bytes(4, self.__byte_order))
         self.__writer_stream.write(data)
         await self.__writer_stream.drain()
