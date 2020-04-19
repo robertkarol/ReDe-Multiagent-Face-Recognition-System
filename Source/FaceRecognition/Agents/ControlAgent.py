@@ -40,7 +40,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
-            requests: List[Tuple[Any, RecognitionRequest]] = await self.__outer_ref.loop.run_in_executor(None,
+            requests: List[Tuple[Any, Any]] = await self.__outer_ref.loop.run_in_executor(None,
                                                             lambda: self.__outer_ref.interface_server.dequeue_requests(
                                                                 self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
@@ -49,8 +49,8 @@ class ControlAgent(Agent):
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
                     recognition_request = RecognitionRequest.deserialize_request(request[1])
-                    recognition_request.append((request[0], recognition_request.face_image))
-                    self.__outer_ref.blackboard.publish_recognition_requests(recognition_request.detection_location,
+                    print(recognition_request)
+                    self.__outer_ref.blackboard.publish_recognition_request(recognition_request.detection_location,
                                                                     (request[0], recognition_request.face_image))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 

@@ -24,12 +24,16 @@ class InterfaceServer(multiprocessing.Process):
         req = []
         if amount == -1:
             amount = self.requests.qsize()
-        try:
-            req = [self.requests.get_nowait() for _ in range(amount)]
-        except queue.Empty:
-            pass
-        finally:
-            return req
+        if amount > 0:
+            req = [self.requests.get()]
+            try:
+                for _ in range(amount - 1):
+                    req.append(self.requests.get_nowait())
+            except queue.Empty:
+                print(amount)
+                print("error")
+                pass
+        return req
 
     def run(self):
         executor = futures.ThreadPoolExecutor(max_workers=self.__max_threads_count)
@@ -54,10 +58,10 @@ class InterfaceServer(multiprocessing.Process):
         current_conn = self.__connection_manager.register_connection(reader, writer)
         while True:
             print("Processing requests...")
-            data = current_conn.read_data()
+            data = await current_conn.read_data()
             if not data:
                 break
-            self.requests.put((current_conn, data.decode()))
+            self.requests.put((current_conn.connection_id, data))
         self.__connection_manager.unregister_connection(current_conn.connection_id)
         print("Ending processing requests...")
 
@@ -65,5 +69,5 @@ class InterfaceServer(multiprocessing.Process):
         while True:
             print("Processing responses...")
             current_conn, message = await self.__loop.run_in_executor(None, lambda: self.responses.get())
-            current_conn.write_data(message)
+            await self.__connection_manager.get_connection(current_conn).write_data(message)
             print(f"Sending: {message}")

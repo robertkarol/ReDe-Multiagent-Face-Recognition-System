@@ -10,7 +10,7 @@
       "model-directory" : "./locals"
     },
     {
-      "agent-name" : "robertkarol-rec1",
+      "agent-name" : "robertkarol-rec2",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
@@ -19,7 +19,7 @@
       "model-directory" : "./locals"
     },
     {
-      "agent-name" : "robertkarol-rec1",
+      "agent-name" : "robertkarol-rec3",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
@@ -28,7 +28,7 @@
       "model-directory" : "./locals"
     },
     {
-      "agent-name" : "robertkarol-rec1",
+      "agent-name" : "robertkarol-rec4",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
@@ -37,7 +37,7 @@
       "model-directory" : "./locals"
     },
     {
-      "agent-name" : "robertkarol-rec1",
+      "agent-name" : "robertkarol-rec5",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,

@@ -23,8 +23,14 @@ class RecognitionBlackboard:
     def publish_recognition_requests(self, detection_source, recognition_requests):
         self.__enqueue_elements(detection_source, recognition_requests)
 
+    def publish_recognition_request(self, detection_source, recognition_request):
+        self.publish_recognition_requests(detection_source, [recognition_request])
+
     def publish_recognition_results(self, recognition_results):
         self.__enqueue_elements('results', recognition_results)
+
+    def publish_recognition_result(self, recognition_result):
+        self.__enqueue_elements('results', [recognition_result])
 
     def __dequeue_element(self, queue_id, amount):
         available_amount = len(self.__queues[queue_id])

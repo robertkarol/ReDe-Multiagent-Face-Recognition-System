@@ -20,6 +20,9 @@ class ConnectionManager:
             self.__connections[conn_id].close()
         del self.__connections[conn_id]
 
+    def get_connection(self, conn_id):
+        return self.__connections[conn_id]
+
     def __get_random_alphanumeric_string(self, string_length):
         charset = string.ascii_letters + string.digits
         return ''.join((random.choice(charset) for _ in range(string_length)))
