@@ -1,9 +1,6 @@
 import asyncio
-import time
-
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
-
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from RecognitionModel import RecognitionModel
 
@@ -40,8 +37,6 @@ class RecognitionAgent(Agent):
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
-            global recog_ag_count
-            recog_ag_count -= 1
             print(f"{self.__outer_ref.jid} ending the monitoring . . .")
 
         def __unwrap_requests(self, raw_data):
