@@ -16,7 +16,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling for results. . .")
-            data = self.__outer_ref.blackboard.get_recognition_results(20)
+            data = self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(1)
             else:
@@ -39,7 +39,8 @@ class ControlAgent(Agent):
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
             requests = await self.__outer_ref.loop.run_in_executor(None,
-                                            lambda: self.__outer_ref.interface_server.dequeue_requests(20))
+                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
+                                                self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
                 await asyncio.sleep(1)
             else:
@@ -51,13 +52,14 @@ class ControlAgent(Agent):
             print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
 
     def __init__(self, jid, password, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
-                 executor, verify_security=False):
+                 executor, processing_batch_size=10, verify_security=False):
         self.jid = jid
         self.blackboard = blackboard
         self.password = password
         self.interface_server = interface_server
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(executor)
+        self.processing_batch_size = processing_batch_size
         super().__init__(jid, password, verify_security)
 
     async def setup(self):

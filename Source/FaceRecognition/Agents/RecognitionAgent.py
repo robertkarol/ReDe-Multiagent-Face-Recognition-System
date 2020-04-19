@@ -25,7 +25,8 @@ class RecognitionAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling. . .")
-            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve, 4)
+            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
+                                                                        self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(1)
                 return
@@ -53,7 +54,8 @@ class RecognitionAgent(Agent):
                 results.append((agents[i], res))
             return results
 
-    def __init__(self, jid, password, blackboard: RecognitionBlackboard, location_to_serve, model, executor, verify_security=False):
+    def __init__(self, jid, password, blackboard: RecognitionBlackboard, location_to_serve, model,
+                 executor, processing_batch_size=5, verify_security=False):
         self.jid = jid
         self.password = password
         self.blackboard = blackboard
@@ -61,6 +63,7 @@ class RecognitionAgent(Agent):
         self.model = model
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(executor)
+        self.processing_batch_size = processing_batch_size
         super().__init__(jid, password, verify_security)
 
     async def setup(self):

@@ -36,7 +36,8 @@ if __name__ == "__main__":
                          blackboard,
                          agent['location-to-serve'],
                          f"{agent['model-directory']}/{agent['model-basename']}",
-                         executor)
+                         executor,
+                         agent['agent-processing-batch-size'])
         for agent in recognition_agents_config
     ]
     recog_ag_count = len(recognition_agents)
@@ -46,7 +47,8 @@ if __name__ == "__main__":
                      agent['agent-password'],
                      blackboard,
                      server,
-                     executor)
+                     executor,
+                     agent['agent-processing-batch-size'])
         for agent in control_agents_config
     ]
 
