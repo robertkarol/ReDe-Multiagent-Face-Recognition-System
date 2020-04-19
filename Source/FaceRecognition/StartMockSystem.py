@@ -1,11 +1,10 @@
-import multiprocessing
-from concurrent import futures
-
 from Agents.ControlAgent import ControlAgent
 from Agents.RecognitionAgent import RecognitionAgent
 from Persistance.MockRecognitionBlackboard import MockRecognitionBlackboard
-from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
+from concurrent import futures
+import multiprocessing
+
 
 if __name__ == "__main__":
     executor = futures.ThreadPoolExecutor(max_workers=8)

@@ -1,13 +1,13 @@
+from DatasetHelpers import DatasetHelpers
+from ResourceLocalizer import ResourceLocalizer
 from keras.backend import set_session
 from keras.models import load_model
-import numpy as np
 from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from DatasetHelpers import DatasetHelpers
-from ResourceLocalizer import ResourceLocalizer
+import numpy as np
 import pickle
 import tensorflow as tf
 

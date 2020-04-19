@@ -1,8 +1,8 @@
-import asyncio
-from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from RecognitionModel import RecognitionModel
+from spade.agent import Agent
+from spade.behaviour import CyclicBehaviour
+import asyncio
 
 
 class RecognitionAgent(Agent):

@@ -1,8 +1,8 @@
+from Server.ConnectionManager import ConnectionManager
+from concurrent import futures
 import asyncio
 import multiprocessing
 import queue
-from concurrent import futures
-from Server.ConnectionManager import ConnectionManager
 
 
 class InterfaceServer(multiprocessing.Process):

@@ -1,9 +1,9 @@
-import asyncio
-import queue
-from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
+from spade.agent import Agent
+from spade.behaviour import CyclicBehaviour
+import asyncio
+import queue
 
 
 class ControlAgent(Agent):

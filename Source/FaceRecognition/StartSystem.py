@@ -1,10 +1,10 @@
-import multiprocessing
-import json
-from concurrent import futures
 from Agents.ControlAgent import ControlAgent
 from Agents.RecognitionAgent import RecognitionAgent
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
+from concurrent import futures
+import json
+import multiprocessing
 
 global recog_ag_count
 
