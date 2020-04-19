@@ -14,6 +14,7 @@ class RecognitionAgent(Agent):
 
         async def load_model(self):
             print(f"{self.__outer_ref.jid} loading model . . .")
+            # TODO: Add model versioning capabilities
             model = await self.__outer_ref.loop.run_in_executor(None, lambda: RecognitionModel.load_model_from_binary(
                 self.__outer_ref.model))
             print(f"{self.__outer_ref.jid} done loading model . . .")
