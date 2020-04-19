@@ -26,7 +26,8 @@ if __name__ == "__main__":
 
     responses = multiprocessing.Queue()
     requests = multiprocessing.Queue()
-    server = InterfaceServer(requests, responses, config['max-interface-server-workers-count'])
+    server = InterfaceServer(requests, responses, config['server-location']['ip'], config['server-location']['port'],
+                             config['max-interface-server-workers-count'])
 
     blackboard = RecognitionBlackboard([agent['location-to-serve'] for agent in recognition_agents_config])
 

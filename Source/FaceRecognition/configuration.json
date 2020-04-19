@@ -55,5 +55,9 @@
   }
   ],
   "max-recognition-workers-count" : 8,
-  "max-interface-server-workers-count" : 4
+  "max-interface-server-workers-count" : 4,
+  "server-location" : {
+    "ip" : "127.0.0.1",
+    "port" : 8888
+  }
 }

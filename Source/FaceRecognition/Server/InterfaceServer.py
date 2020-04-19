@@ -6,10 +6,12 @@ import queue
 
 
 class InterfaceServer(multiprocessing.Process):
-    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue, max_threads_count=4):
+    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue, ip, port, max_threads_count=4):
         super().__init__()
         self.requests = requests
         self.responses = responses
+        self.__ip = ip
+        self.__port = port
         self.__max_threads_count = max_threads_count
         self.__loop = None
         self.__connection_manager = ConnectionManager()
@@ -44,7 +46,7 @@ class InterfaceServer(multiprocessing.Process):
 
     async def __start_requests_server(self):
         req_server = await asyncio.start_server(
-            self.__requests_handler, '127.0.0.1', 8888)
+            self.__requests_handler, self.__ip, self.__port)
         async with req_server:
             await req_server.serve_forever()
 

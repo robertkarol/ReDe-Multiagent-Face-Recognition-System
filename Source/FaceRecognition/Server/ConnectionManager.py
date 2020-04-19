@@ -5,11 +5,12 @@ from Server.Connection import Connection
 
 
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self, conn_id_len=10):
+        self.__conn_id_len = conn_id_len
         self.__connections = {}
 
     def register_connection(self, reader_stream, writer_stream):
-        conn_id = self.__get_random_alphanumeric_string(10)
+        conn_id = self.__get_random_alphanumeric_string(self.__conn_id_len)
         conn = Connection(conn_id, reader_stream, writer_stream)
         self.__connections[conn_id] = conn
         return conn
