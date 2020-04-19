@@ -2,26 +2,26 @@ from collections import deque
 
 
 class RecognitionBlackboard:
-    def __init__(self, detection_source_agents):
+    def __init__(self, detection_sources):
         self.__queues = {}
-        for agent in detection_source_agents:
-            self.__queues[agent] = deque()
+        for source in detection_sources:
+            self.__queues[source] = deque()
         self.__queues['results'] = deque()
 
-    def register_detection_source_agent(self, detection_source_agent):
-        self.__queues[detection_source_agent] = deque()
+    def register_detection_source(self, detection_source):
+        self.__queues[detection_source] = deque()
 
-    def unregister_detection_source_agent(self, detection_source_agent):
-        del self.__queues[detection_source_agent]
+    def unregister_detection_source(self, detection_source):
+        del self.__queues[detection_source]
 
-    def get_recognition_requests(self, detection_source_agent, amount=-1):
-        return self.__dequeue_element(detection_source_agent, amount)
+    def get_recognition_requests(self, detection_source, amount=-1):
+        return self.__dequeue_element(detection_source, amount)
 
     def get_recognition_results(self, amount=-1):
         return self.__dequeue_element('results', amount)
 
-    def publish_recognition_requests(self, detection_source_agent, recognition_requests):
-        self.__enqueue_elements(detection_source_agent, recognition_requests)
+    def publish_recognition_requests(self, detection_source, recognition_requests):
+        self.__enqueue_elements(detection_source, recognition_requests)
 
     def publish_recognition_results(self, recognition_results):
         self.__enqueue_elements('results', recognition_results)
