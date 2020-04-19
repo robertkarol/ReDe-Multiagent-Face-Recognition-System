@@ -6,10 +6,11 @@ import queue
 
 
 class InterfaceServer(multiprocessing.Process):
-    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue):
+    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue, max_threads_count=4):
         super().__init__()
         self.requests = requests
         self.responses = responses
+        self.__max_threads_count = max_threads_count
         self.__loop = None
         self.__connection_manager = ConnectionManager()
 
@@ -29,7 +30,7 @@ class InterfaceServer(multiprocessing.Process):
             return req
 
     def run(self):
-        executor = futures.ThreadPoolExecutor(max_workers=4)
+        executor = futures.ThreadPoolExecutor(max_workers=self.__max_threads_count)
         self.__loop = asyncio.get_event_loop()
         self.__loop.set_default_executor(executor)
         try:

@@ -47,5 +47,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city"
   }
-  ]
+  ],
+  "max-recognition-workers-count" : 8,
+  "max-interface-server-workers-count" : 4
 }

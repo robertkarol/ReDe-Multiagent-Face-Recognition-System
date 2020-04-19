@@ -1,6 +1,7 @@
 from Agents.ControlAgent import ControlAgent
 from Agents.RecognitionAgent import RecognitionAgent
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
+from ResourceLocalizer import ResourceLocalizer
 from Server.InterfaceServer import InterfaceServer
 from concurrent import futures
 import json
@@ -15,16 +16,17 @@ def start_components(components):
 
 
 if __name__ == "__main__":
-    with open('configuration.json') as config_file:
+    resource_localizer = ResourceLocalizer()
+    with open(resource_localizer.SystemConfigurationFile) as config_file:
         config = json.loads(config_file.read())
     recognition_agents_config = config['recognition-agents']
     control_agents_config = config['control-agents']
 
-    executor = futures.ThreadPoolExecutor(max_workers=8)
+    executor = futures.ThreadPoolExecutor(max_workers=config['max-recognition-workers-count'])
 
     responses = multiprocessing.Queue()
     requests = multiprocessing.Queue()
-    server = InterfaceServer(requests, responses)
+    server = InterfaceServer(requests, responses, config['max-interface-server-workers-count'])
 
     blackboard = RecognitionBlackboard([agent['location-to-serve'] for agent in recognition_agents_config])
 
