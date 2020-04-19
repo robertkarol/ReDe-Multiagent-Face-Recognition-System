@@ -1,7 +1,9 @@
+from Domain.RecognitionRequest import RecognitionRequest
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+from typing import List, Tuple, Any
 import asyncio
 
 
@@ -9,7 +11,7 @@ class ControlAgent(Agent):
     class RecognitionResultsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
-            self.__outer_ref = outer_ref
+            self.__outer_ref: ControlAgent = outer_ref
 
         async def on_start(self):
             print(f"{self.__outer_ref.jid} starting monitoring results . . .")
@@ -31,21 +33,25 @@ class ControlAgent(Agent):
     class RecognitionRequestsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
-            self.__outer_ref = outer_ref
+            self.__outer_ref: ControlAgent = outer_ref
 
         async def on_start(self):
             print(f"{self.__outer_ref.jid} starting monitoring requests. . .")
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
-            requests = await self.__outer_ref.loop.run_in_executor(None,
-                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
-                                                self.__outer_ref.processing_batch_size))
+            requests: List[Tuple[Any, RecognitionRequest]] = await self.__outer_ref.loop.run_in_executor(None,
+                                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
+                                                                self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
                 await asyncio.sleep(1)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
-                # TODO: Add data for agents and retrieve results to send back
+                for request in requests:
+                    recognition_request = RecognitionRequest.deserialize_request(request[1])
+                    recognition_request.append((request[0], recognition_request.face_image))
+                    self.__outer_ref.blackboard.publish_recognition_requests(recognition_request.detection_location,
+                                                                    (request[0], recognition_request.face_image))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
         async def on_end(self):
