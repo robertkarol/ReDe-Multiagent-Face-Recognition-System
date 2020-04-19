@@ -13,8 +13,6 @@ class RecognitionAgent(Agent):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref = outer_ref
-            #self.__loop = asyncio.get_event_loop()
-            #self.__loop.set_default_executor(outer_ref.executor)
             self.__model = None
 
         async def load_model(self):
@@ -30,7 +28,7 @@ class RecognitionAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling. . .")
-            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.agents_to_respond, 4)
+            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve, 4)
             if len(data) == 0:
                 await asyncio.sleep(1)
                 return
@@ -60,11 +58,11 @@ class RecognitionAgent(Agent):
                 results.append((agents[i], res))
             return results
 
-    def __init__(self, jid, password, blackboard: RecognitionBlackboard, agents_to_serve, model, executor, verify_security=False):
+    def __init__(self, jid, password, blackboard: RecognitionBlackboard, location_to_serve, model, executor, verify_security=False):
         self.jid = jid
         self.password = password
         self.blackboard = blackboard
-        self.agents_to_respond = agents_to_serve
+        self.location_to_serve = location_to_serve
         self.model = model
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(executor)
