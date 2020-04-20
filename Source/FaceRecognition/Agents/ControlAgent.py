@@ -1,6 +1,4 @@
-import pickle
 from concurrent.futures.thread import ThreadPoolExecutor
-
 from Domain.RecognitionRequest import RecognitionRequest
 from Domain.RecognitionResponse import RecognitionResponse
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
@@ -9,6 +7,7 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from typing import List, Tuple, Any
 import asyncio
+import pickle
 
 
 class ControlAgent(Agent):

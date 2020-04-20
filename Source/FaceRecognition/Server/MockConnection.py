@@ -1,6 +1,5 @@
-import asyncio
-
 from Server.Connection import Connection
+import asyncio
 
 
 class MockConnection(Connection):

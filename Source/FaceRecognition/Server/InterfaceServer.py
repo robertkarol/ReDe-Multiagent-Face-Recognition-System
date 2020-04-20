@@ -1,7 +1,6 @@
-from typing import Iterable
-
 from Server.ConnectionManager import ConnectionManager
 from concurrent import futures
+from typing import Iterable
 import asyncio
 import multiprocessing
 import queue

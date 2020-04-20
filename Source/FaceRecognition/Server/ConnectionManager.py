@@ -15,7 +15,7 @@ class ConnectionManager:
         self.__connections[conn_id] = conn
         return conn
 
-    def unregister_connection(self, conn_id, close_conn=True) -> None:
+    def unregister_connection(self, conn_id, close_conn: bool = True) -> None:
         if close_conn:
             self.__connections[conn_id].close()
         del self.__connections[conn_id]

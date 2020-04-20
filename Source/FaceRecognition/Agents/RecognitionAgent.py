@@ -1,7 +1,6 @@
-from concurrent.futures.thread import ThreadPoolExecutor
-
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from RecognitionModel import RecognitionModel
+from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 import asyncio
