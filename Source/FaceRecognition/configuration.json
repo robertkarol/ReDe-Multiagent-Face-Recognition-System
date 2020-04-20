@@ -5,6 +5,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
       "location-to-serve" : "Arad",
       "model-basename" : "partial2",
       "model-directory" : "./locals"
@@ -14,6 +15,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
       "location-to-serve" : "Cluj",
       "model-basename" : "partial2",
       "model-directory" : "./locals"
@@ -23,6 +25,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
       "location-to-serve" : "Timisoara",
       "model-basename" : "partial3",
       "model-directory" : "./locals"
@@ -32,6 +35,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
       "location-to-serve" : "Oradea",
       "model-basename" : "partial4",
       "model-directory" : "./locals"
@@ -41,6 +45,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
       "location-to-serve" : "Alba Iulia",
       "model-basename" : "partial5",
       "model-directory" : "./locals"
@@ -51,7 +56,8 @@
       "agent-name" : "robertkarol-ctrl1",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
-      "agent-processing-batch-size" : 20
+      "agent-processing-batch-size" : 20,
+      "polling-interval" : 1
   }
   ],
   "max-recognition-workers-count" : 8,

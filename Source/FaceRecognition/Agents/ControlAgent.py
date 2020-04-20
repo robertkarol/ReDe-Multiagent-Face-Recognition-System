@@ -7,7 +7,6 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from typing import List, Tuple, Any
 import asyncio
-import pickle
 
 
 class ControlAgent(Agent):
@@ -23,7 +22,7 @@ class ControlAgent(Agent):
             print(f"{self.__outer_ref.jid} polling for results. . .")
             data = self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
             if len(data) == 0:
-                await asyncio.sleep(1)
+                await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
                 # TODO: threshold probability if it should generate outcome
@@ -49,7 +48,7 @@ class ControlAgent(Agent):
                                                             lambda: self.__outer_ref.interface_server.dequeue_requests(
                                                                 self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
-                await asyncio.sleep(1)
+                await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
@@ -63,7 +62,8 @@ class ControlAgent(Agent):
             print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
 
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
-                 executor: ThreadPoolExecutor, processing_batch_size: int = 10, verify_security: bool = False):
+                 executor: ThreadPoolExecutor, processing_batch_size: int = 10, polling_interval: float = 1,
+                 verify_security: bool = False):
         self.jid = jid
         self.blackboard = blackboard
         self.password = password
@@ -71,6 +71,7 @@ class ControlAgent(Agent):
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(executor)
         self.processing_batch_size = processing_batch_size
+        self.polling_interval = polling_interval
         super().__init__(jid, password, verify_security)
 
     async def setup(self):
