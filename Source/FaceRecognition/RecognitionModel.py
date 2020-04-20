@@ -110,7 +110,7 @@ class RecognitionModel:
 
     @staticmethod
     def load_model_from_binary(path_to_binary):
-        with open(path_to_binary + ".pkl", "rb") as input:
+        with open(path_to_binary, "rb") as input:
             session = tf.Session()
             graph = tf.get_default_graph()
             set_session(session)

@@ -20,19 +20,23 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling for results. . .")
-            data = self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
-            if len(data) == 0:
+            results = self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
+            if len(results) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
                 # TODO: threshold probability if it should generate outcome
-                response = RecognitionResponse.serialize(RecognitionResponse(data[1][0], data[1][1]))
                 await self.__outer_ref.loop.run_in_executor(None,
-                                            lambda: self.__outer_ref.interface_server.enqueue_responses(data[0], response))
+                            lambda: self.__outer_ref.interface_server.enqueue_responses(self.__wrap_results(results)))
                 print(f"{self.__outer_ref.jid} done resolving results. . .")
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending monitoring results. . .")
+
+        def __wrap_results(self, results):
+            responses = [(result[0], RecognitionResponse.serialize(RecognitionResponse(result[1][0], result[1][1])))
+                         for result in results]
+            return responses
 
     class RecognitionRequestsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
