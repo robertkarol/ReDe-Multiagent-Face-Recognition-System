@@ -10,8 +10,8 @@ class InterfaceServer(multiprocessing.Process):
     def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue,
                  ip: str, port: int, max_threads_count: int = 4):
         super().__init__()
-        self.requests = requests
-        self.responses = responses
+        self.__requests = requests
+        self.__responses = responses
         self.__ip = ip
         self.__port = port
         self.__max_threads_count = max_threads_count
@@ -20,22 +20,20 @@ class InterfaceServer(multiprocessing.Process):
 
     def enqueue_responses(self, responses: Iterable) -> None:
         for res in responses:
-            self.responses.put(res)
+            self.__responses.put(res)
 
-    def dequeue_requests(self, amount: int = -1):
-        req = []
+    def dequeue_requests(self, amount: int = -1) -> Iterable:
+        requests = []
         if amount == -1:
-            amount = self.requests.qsize()
+            amount = self.__requests.qsize()
         if amount > 0:
-            req = [self.requests.get()]
+            requests = [self.__requests.get()]
             try:
                 for _ in range(amount - 1):
-                    req.append(self.requests.get_nowait())
+                    requests.append(self.__requests.get_nowait())
             except queue.Empty:
-                print(amount)
-                print("error")
                 pass
-        return req
+        return requests
 
     def run(self):
         executor = futures.ThreadPoolExecutor(max_workers=self.__max_threads_count)
@@ -63,13 +61,13 @@ class InterfaceServer(multiprocessing.Process):
             data = await current_conn.read_data()
             if not data:
                 break
-            self.requests.put((current_conn.connection_id, data))
+            self.__requests.put((current_conn.connection_id, data))
         self.__connection_manager.unregister_connection(current_conn.connection_id)
         print("Ending processing requests...")
 
     async def __responses_handler(self):
         while True:
             print("Processing responses...")
-            current_conn, message = await self.__loop.run_in_executor(None, lambda: self.responses.get())
+            current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
             await self.__connection_manager.get_connection(current_conn).write_data(message)
             print(f"Sending: {message}")

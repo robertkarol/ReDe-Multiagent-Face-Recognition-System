@@ -75,7 +75,7 @@ class ControlAgent(Agent):
         super().__init__(jid, password, verify_security)
 
     async def setup(self):
-        print("Agent starting . . .")
+        print(f"Agent {self.jid} starting . . .")
         res_beh = self.RecognitionResultsMonitoringBehavior(self)
         req_beh = self.RecognitionRequestsMonitoringBehavior(self)
         self.add_behaviour(res_beh)

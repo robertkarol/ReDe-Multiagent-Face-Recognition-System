@@ -36,7 +36,8 @@ if __name__ == "__main__":
                          agent['agent-password'],
                          blackboard,
                          agent['location-to-serve'],
-                         f"{agent['model-directory']}/{agent['model-basename']}",
+                         agent['model-directory'],
+                         agent['model-basename'],
                          executor,
                          agent['agent-processing-batch-size'],
                          agent['polling-interval'])
