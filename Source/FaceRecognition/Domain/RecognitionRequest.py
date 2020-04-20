@@ -4,7 +4,7 @@ import pickle
 # TODO: Support cross platform serialization
 class RecognitionRequest:
 
-    def __init__(self, agent_name, agent_location, face_image, generate_outcome=False):
+    def __init__(self, agent_name: str, agent_location: str, face_image, generate_outcome: bool = False):
         self.__agent_name = agent_name
         self.__agent_location = agent_location
         self.__face_image = face_image

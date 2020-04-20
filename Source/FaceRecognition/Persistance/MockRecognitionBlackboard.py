@@ -27,7 +27,6 @@ class MockRecognitionBlackboard(RecognitionBlackboard):
         super().publish_recognition_requests(4, agent4)
         super().publish_recognition_requests(5, agent5)
 
-
     def __fake_add_agent_to_respond(self, agent_images):
         for i in range(len(agent_images)):
             agent_images[i] = (MockConnection(), agent_images[i])

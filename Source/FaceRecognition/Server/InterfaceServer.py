@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from Server.ConnectionManager import ConnectionManager
 from concurrent import futures
 import asyncio
@@ -6,7 +8,8 @@ import queue
 
 
 class InterfaceServer(multiprocessing.Process):
-    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue, ip, port, max_threads_count=4):
+    def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue,
+                 ip: str, port: int, max_threads_count: int = 4):
         super().__init__()
         self.requests = requests
         self.responses = responses
@@ -16,11 +19,11 @@ class InterfaceServer(multiprocessing.Process):
         self.__loop = None
         self.__connection_manager = ConnectionManager()
 
-    def enqueue_responses(self, responses):
+    def enqueue_responses(self, responses: Iterable) -> None:
         for res in responses:
             self.responses.put(res)
 
-    def dequeue_requests(self, amount=-1):
+    def dequeue_requests(self, amount: int = -1):
         req = []
         if amount == -1:
             amount = self.requests.qsize()

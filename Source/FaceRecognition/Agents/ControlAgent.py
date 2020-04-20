@@ -1,4 +1,5 @@
 import pickle
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from Domain.RecognitionRequest import RecognitionRequest
 from Domain.RecognitionResponse import RecognitionResponse
@@ -62,8 +63,8 @@ class ControlAgent(Agent):
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
 
-    def __init__(self, jid, password, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
-                 executor, processing_batch_size=10, verify_security=False):
+    def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
+                 executor: ThreadPoolExecutor, processing_batch_size: int = 10, verify_security: bool = False):
         self.jid = jid
         self.blackboard = blackboard
         self.password = password

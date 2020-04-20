@@ -28,10 +28,10 @@ class Connection:
             data = await self.__reader_stream.read(data_len)
         return data
 
-    async def write_data(self, data):
+    async def write_data(self, data) -> None:
         self.__writer_stream.write(len(data).to_bytes(4, self.__byte_order))
         self.__writer_stream.write(data)
         await self.__writer_stream.drain()
 
-    def close(self):
+    def close(self) -> None:
         self.__writer_stream.close()

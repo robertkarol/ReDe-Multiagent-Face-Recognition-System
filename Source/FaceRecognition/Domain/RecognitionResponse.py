@@ -12,7 +12,7 @@ class RecognitionOutcome(Enum):
 # TODO: Support cross platform serialization
 class RecognitionResponse:
 
-    def __init__(self, recognized_class, probability, outcome: RecognitionOutcome = RecognitionOutcome.UNKNOWN):
+    def __init__(self, recognized_class, probability: float, outcome: RecognitionOutcome = RecognitionOutcome.UNKNOWN):
         self.__recognized_class = recognized_class
         self.__probability = probability
         self.__outcome = outcome

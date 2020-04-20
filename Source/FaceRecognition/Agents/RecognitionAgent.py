@@ -1,3 +1,5 @@
+from concurrent.futures.thread import ThreadPoolExecutor
+
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from RecognitionModel import RecognitionModel
 from spade.agent import Agent
@@ -9,7 +11,7 @@ class RecognitionAgent(Agent):
     class MonitoringRecognitionRequestsBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
-            self.__outer_ref = outer_ref
+            self.__outer_ref: RecognitionAgent = outer_ref
             self.__model = None
 
         async def load_model(self):
@@ -56,8 +58,8 @@ class RecognitionAgent(Agent):
                 results.append((agents[i], res))
             return results
 
-    def __init__(self, jid, password, blackboard: RecognitionBlackboard, location_to_serve, model,
-                 executor, processing_batch_size=5, verify_security=False):
+    def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str, model: str,
+                 executor: ThreadPoolExecutor, processing_batch_size: int = 5, verify_security: bool = False):
         self.jid = jid
         self.password = password
         self.blackboard = blackboard
