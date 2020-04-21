@@ -1,5 +1,4 @@
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
-from RecognitionModel import RecognitionModel
 from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
@@ -12,7 +11,7 @@ class RecognitionAgent(Agent):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref: RecognitionAgent = outer_ref
-            self.__model_versioning = ModelManager.get_versioning(self.__outer_ref.model_directory)
+            self.__model_manager = ModelManager.get_manager(self.__outer_ref.model_directory)
             self.__model = None
 
         async def on_start(self):
@@ -39,7 +38,7 @@ class RecognitionAgent(Agent):
 
         async def __load_model(self):
             print(f"{self.__outer_ref.jid} loading model . . .")
-            model = await self.__outer_ref.loop.run_in_executor(None, lambda: self.__model_versioning.get_model(
+            model = await self.__outer_ref.loop.run_in_executor(None, lambda: self.__model_manager.get_model(
                 self.__outer_ref.model_basename))
             print(f"{self.__outer_ref.jid} done loading model . . .")
             return model
