@@ -3,7 +3,7 @@ from os import path, listdir, mkdir
 import re
 
 
-class ModelVersioning:
+class ModelManager:
     __instances = {}
 
     def __init__(self):

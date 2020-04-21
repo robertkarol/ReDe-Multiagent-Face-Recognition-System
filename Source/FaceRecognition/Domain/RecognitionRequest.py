@@ -26,8 +26,8 @@ class RecognitionRequest:
     def generate_outcome(self):
         return self.__generate_outcome
 
-    @staticmethod
-    def deserialize(bytes):
+    @classmethod
+    def deserialize(cls, bytes):
         request = pickle.loads(bytes)
         return request
 

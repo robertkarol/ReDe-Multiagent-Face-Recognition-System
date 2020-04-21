@@ -58,7 +58,10 @@ class InterfaceServer(multiprocessing.Process):
         current_conn = self.__connection_manager.register_connection(reader, writer)
         while True:
             print("Processing requests...")
-            data = await current_conn.read_data()
+            try:
+                data = await current_conn.read_data()
+            except ConnectionError:
+                break
             if not data:
                 break
             self.__requests.put((current_conn.connection_id, data))
@@ -69,5 +72,8 @@ class InterfaceServer(multiprocessing.Process):
         while True:
             print("Processing responses...")
             current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
-            await self.__connection_manager.get_connection(current_conn).write_data(message)
+            try:
+                await self.__connection_manager.get_connection(current_conn).write_data(message)
+            except ConnectionError:
+                break
             print(f"Sending: {message}")

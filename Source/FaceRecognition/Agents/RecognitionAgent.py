@@ -1,6 +1,6 @@
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from RecognitionModel import RecognitionModel
-from Services.ModelVersioning import ModelVersioning
+from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -12,7 +12,7 @@ class RecognitionAgent(Agent):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref: RecognitionAgent = outer_ref
-            self.__model_versioning = ModelVersioning.get_versioning(self.__outer_ref.model_directory)
+            self.__model_versioning = ModelManager.get_versioning(self.__outer_ref.model_directory)
             self.__model = None
 
         async def on_start(self):

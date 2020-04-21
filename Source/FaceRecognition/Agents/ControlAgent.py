@@ -48,9 +48,9 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
-            requests: List[Tuple[Any, Any]] = await self.__outer_ref.loop.run_in_executor(None,
-                                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
-                                                                self.__outer_ref.processing_batch_size))
+            requests = await self.__outer_ref.loop.run_in_executor(None,
+                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
+                                                        self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
