@@ -1,0 +1,69 @@
+{
+  "recognition-agents" : [
+    {
+      "agent-name" : "robertkarol-rec1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
+      "location-to-serve" : "Arad",
+      "model-basename" : "partial2",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec2",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
+      "location-to-serve" : "Cluj",
+      "model-basename" : "partial2",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec3",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
+      "location-to-serve" : "Timisoara",
+      "model-basename" : "partial3",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec4",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
+      "location-to-serve" : "Oradea",
+      "model-basename" : "partial4",
+      "model-directory" : "./locals"
+    },
+    {
+      "agent-name" : "robertkarol-rec5",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "polling-interval" : 1,
+      "location-to-serve" : "Alba Iulia",
+      "model-basename" : "partial5",
+      "model-directory" : "./locals"
+    }
+  ],
+  "control-agents" : [
+  {
+      "agent-name" : "robertkarol-ctrl1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 20,
+      "polling-interval" : 1
+  }
+  ],
+  "max-recognition-workers-count" : 8,
+  "max-interface-server-workers-count" : 4,
+  "server-location" : {
+    "ip" : "127.0.0.1",
+    "port" : 8888
+  }
+}

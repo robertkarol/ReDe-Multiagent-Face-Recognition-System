@@ -1,13 +1,13 @@
+from DatasetHelpers import DatasetHelpers
+from ResourceLocalizer import ResourceLocalizer
 from keras.backend import set_session
 from keras.models import load_model
-import numpy as np
 from numpy import expand_dims, load, asarray
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import Normalizer, LabelEncoder
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from DatasetHelpers import DatasetHelpers
-from ResourceLocalizer import ResourceLocalizer
+import numpy as np
 import pickle
 import tensorflow as tf
 
@@ -110,7 +110,7 @@ class RecognitionModel:
 
     @staticmethod
     def load_model_from_binary(path_to_binary):
-        with open(path_to_binary + ".pkl", "rb") as input:
+        with open(path_to_binary, "rb") as input:
             session = tf.Session()
             graph = tf.get_default_graph()
             set_session(session)
