@@ -52,13 +52,22 @@
     }
   ],
   "control-agents" : [
-  {
+    {
       "agent-name" : "robertkarol-ctrl1",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 20,
       "polling-interval" : 1
-  }
+    }
+  ],
+  "retrain-agents" : [
+    {
+      "agent-name" : "robertkarol",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "data-directory" : "./locals",
+      "polling-interval" : 120
+    }
   ],
   "max-recognition-workers-count" : 8,
   "max-interface-server-workers-count" : 4,
