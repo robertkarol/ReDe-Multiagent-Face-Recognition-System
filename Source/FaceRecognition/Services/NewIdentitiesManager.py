@@ -1,6 +1,6 @@
 from Services.DirectoryContentVersioner import DirectoryContentVersioner
 from Utils.Singleton import SingletonPerKey
-from os import path, mkdir
+from os import path, mkdir, listdir
 from typing import Iterable, Tuple
 
 
@@ -21,14 +21,16 @@ class NewIdentitiesManager(SingletonPerKey):
     def get_manager(cls, data_directory: str, source_locations: list):
         return cls.__new__(cls, data_directory, source_locations)
 
-    def get_newest_identities_dataset_path(self, location: str) -> str:
+    def get_newest_identities_dataset_path(self, location: str) -> (int, str):
         location_dir = self.__get_location_directory(location)
         data_dir, version = self.__data_versioner.get_latest(location_dir, location)
-        new_data_dir = path.join(location_dir, self.__data_versioner.get_versioned_name(location, version + 1))
-        mkdir(new_data_dir)
-        mkdir(path.join(new_data_dir, 'train'))
-        mkdir(path.join(new_data_dir, 'test'))
-        return path.join(location_dir, data_dir)
+        identities_count = len(listdir(path.join(data_dir, 'train')))
+        if identities_count > 0:
+            new_data_dir = path.join(location_dir, self.__data_versioner.get_versioned_name(location, version + 1))
+            mkdir(new_data_dir)
+            mkdir(path.join(new_data_dir, 'train'))
+            mkdir(path.join(new_data_dir, 'test'))
+        return identities_count, path.join(location_dir, data_dir)
 
     def publish_identity(self, location: str, name: str, train_data: Iterable, test_data: Iterable) -> None:
         location_dir = self.__get_location_directory(location)
@@ -39,9 +41,9 @@ class NewIdentitiesManager(SingletonPerKey):
         mkdir(new_id_test_dir)
         self.__save_images(test_data, new_id_test_dir)
 
-    def __save_images(self, images, dir):
+    def __save_images(self, images, directory):
         for i, image in enumerate(images):
-            image.save(path.join(dir, self.__face_image_filename.format(i)))
+            image.save(path.join(directory, self.__face_image_filename.format(i)))
 
     def __get_location_directory(self, location):
         if location not in self.__source_locations:
