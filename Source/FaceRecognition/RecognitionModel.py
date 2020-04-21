@@ -105,6 +105,8 @@ class RecognitionModel:
     @staticmethod
     def save_model_as_binary(recognition_model, filename):
         with open(filename + ".pkl", "wb") as output:
+            del recognition_model.__graph
+            del recognition_model.__session
             pickle.dump(recognition_model, output, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod

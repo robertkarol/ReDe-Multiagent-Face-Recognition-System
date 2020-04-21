@@ -15,8 +15,9 @@ class SingletonPerKey:
 
     def __new__(cls, *args, **kwargs):
         key = args[0]
-        if key in cls._instances:
-            return cls._instances[key]
+        if cls in cls._instances and key in cls._instances[cls]:
+            return cls._instances[cls][key]
         instance = object.__new__(cls)
-        cls._instances[key] = instance
+        cls._instances[cls] = {}
+        cls._instances[cls][key] = instance
         return instance

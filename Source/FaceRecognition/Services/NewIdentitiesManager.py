@@ -23,13 +23,24 @@ class NewIdentitiesManager(SingletonPerKey):
 
     def get_newest_identities_dataset_path(self, location: str) -> (int, str):
         location_dir = self.__get_location_directory(location)
+        if not path.isdir(location_dir):
+            raise LookupError(f"No such {location_dir} identities source being versioned")
+
         data_dir, version = self.__data_versioner.get_latest(location_dir, location)
-        identities_count = len(listdir(path.join(data_dir, 'train')))
+        if not data_dir:
+            return 0, None
+        try:
+            identities_count = len(listdir(path.join(location_dir, data_dir, 'train')))
+        except FileNotFoundError as e:
+            print(e)
+            return 0, None
+
         if identities_count > 0:
             new_data_dir = path.join(location_dir, self.__data_versioner.get_versioned_name(location, version + 1))
             mkdir(new_data_dir)
             mkdir(path.join(new_data_dir, 'train'))
-            mkdir(path.join(new_data_dir, 'test'))
+            mkdir(path.join(new_data_dir, 'val'))
+
         return identities_count, path.join(location_dir, data_dir)
 
     def publish_identity(self, location: str, name: str, train_data: Iterable, test_data: Iterable) -> None:

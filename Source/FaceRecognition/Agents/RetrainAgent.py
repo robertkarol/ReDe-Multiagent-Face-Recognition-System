@@ -2,18 +2,17 @@ from Services.ModelManager import ModelManager
 from Services.NewIdentitiesManager import NewIdentitiesManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
-from spade.behaviour import PeriodicBehaviour
+from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 import asyncio
 
 
 class RetrainAgent(Agent):
     class ModelRetrainBehavior(PeriodicBehaviour):
         def __init__(self, outer_ref, period):
-            super().__init__(period)
+            super().__init__(period=period)
             self.__outer_ref: RetrainAgent = outer_ref
-            self.__new_identities_manager: NewIdentitiesManager = NewIdentitiesManager(list(
-                self.__outer_ref.location_model_dict.keys()), self.__outer_ref.data_directory)
-            self.__model = None
+            self.__new_identities_manager: NewIdentitiesManager = NewIdentitiesManager.get_manager(
+                self.__outer_ref.data_directory, list(self.__outer_ref.location_model_dict.keys()))
 
         async def on_start(self):
             print(f"{self.__outer_ref.jid} starting the monitoring . . .")
@@ -21,9 +20,12 @@ class RetrainAgent(Agent):
         async def run(self):
             print(f"{self.__outer_ref.jid} starting retrain. . .")
             for location in self.__outer_ref.location_model_dict:
-                new_ident_cnt, new_ident_path = \
-                    self.__new_identities_manager.get_newest_identities_dataset_path(location)
-                if len(new_ident_cnt) == 0:
+                try:
+                    new_ident_cnt, new_ident_path = \
+                        self.__new_identities_manager.get_newest_identities_dataset_path(location)
+                except LookupError:
+                    new_ident_cnt = 0
+                if new_ident_cnt == 0:
                     continue
                 await self.__outer_ref.loop.run_in_executor(None, lambda: self.__retrain(
                     self.__outer_ref.location_model_dict[location], new_ident_path))
@@ -52,5 +54,5 @@ class RetrainAgent(Agent):
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
-        retrain_behav = self.ModelRetrainBehavior(self, period=self.period)
+        retrain_behav = self.ModelRetrainBehavior(self, self.period)
         self.add_behaviour(retrain_behav)
