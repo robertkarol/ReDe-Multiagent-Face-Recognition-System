@@ -8,6 +8,8 @@ from concurrent import futures
 import json
 import multiprocessing
 
+from Services.RecognitionLocationsManager import RecognitionLocationsManager
+
 global recog_ag_count
 
 
@@ -31,20 +33,22 @@ if __name__ == "__main__":
     server = InterfaceServer(requests, responses, config['server-location']['ip'], config['server-location']['port'],
                              config['max-interface-server-workers-count'])
 
-    blackboard = RecognitionBlackboard([agent['location-to-serve'] for agent in recognition_agents_config])
+    agent_locations = {}
+    for agent in recognition_agents_config:
+        agent_locations[agent['location-to-serve']] = []
 
-    recognition_agents = [
-        RecognitionAgent(f"{agent['agent-name']}@{agent['agent-server']}",
-                         agent['agent-password'],
-                         blackboard,
-                         agent['location-to-serve'],
-                         agent['model-directory'],
-                         agent['model-basename'],
-                         executor,
-                         agent['agent-processing-batch-size'],
-                         agent['polling-interval'])
-        for agent in recognition_agents_config
-    ]
+    blackboard = RecognitionBlackboard(list(agent_locations.keys()))
+
+    recognition_agents = []
+    for agent in recognition_agents_config:
+        r = RecognitionAgent(f"{agent['agent-name']}@{agent['agent-server']}", agent['agent-password'], blackboard,
+                             agent['location-to-serve'], agent['model-directory'], agent['model-basename'], executor,
+                             agent['agent-processing-batch-size'], agent['polling-interval'])
+        recognition_agents.append(r)
+        agent_locations[r.location_to_serve].append(r)
+
+    recognition_locations_manager = RecognitionLocationsManager()
+    recognition_locations_manager.register_and_set_from_dictionary(agent_locations)
     recog_ag_count = len(recognition_agents)
 
     control_agents = [
@@ -58,15 +62,11 @@ if __name__ == "__main__":
         for agent in control_agents_config
     ]
 
-    location_model_dict = {}
-    for agent in recognition_agents_config:
-        location_model_dict[agent['location-to-serve']] = (agent['model-directory'], agent['model-basename'])
-
     retrain_agents = [
         RetrainAgent(f"{agent['agent-name']}@{agent['agent-server']}",
                      agent['agent-password'],
                      agent['data-directory'],
-                     location_model_dict,
+                     recognition_locations_manager,
                      executor,
                      agent['polling-interval'])
         for agent in retrain_agents_config

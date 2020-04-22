@@ -1,4 +1,5 @@
 from Services.DirectoryContentVersioner import DirectoryContentVersioner
+from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Utils.Singleton import SingletonPerKey
 from os import path, mkdir, listdir
 from typing import Iterable, Tuple
@@ -9,17 +10,16 @@ class NewIdentitiesManager(SingletonPerKey):
 
     def __new__(cls, *args, **kwargs):
         data_directory = args[0]
-        source_locations = args[1]
         instance = super().__new__(cls, data_directory)
-        instance.__source_locations = source_locations
+        instance.__source_locations_manager = RecognitionLocationsManager()
         instance.__data_directory = data_directory
         instance.__data_versioner = DirectoryContentVersioner()
         instance.__face_image_filename = "face{}.jpg"
         return instance
 
     @classmethod
-    def get_manager(cls, data_directory: str, source_locations: list):
-        return cls.__new__(cls, data_directory, source_locations)
+    def get_manager(cls, data_directory: str):
+        return cls.__new__(cls, data_directory)
 
     def get_newest_identities_dataset_path(self, location: str) -> (int, str):
         location_dir = self.__get_location_directory(location)
@@ -57,6 +57,6 @@ class NewIdentitiesManager(SingletonPerKey):
             image.save(path.join(directory, self.__face_image_filename.format(i)))
 
     def __get_location_directory(self, location):
-        if location not in self.__source_locations:
+        if location not in self.__source_locations_manager.get_recognition_locations():
             raise ValueError(f"{location} is not a valid location")
         return path.join(self.__data_directory, location)
