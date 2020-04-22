@@ -1,7 +1,6 @@
+from Server.Connection import Connection
 import random
 import string
-
-from Server.Connection import Connection
 
 
 class ConnectionManager:

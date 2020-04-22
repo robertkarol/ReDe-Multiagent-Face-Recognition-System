@@ -3,12 +3,12 @@ from Agents.RecognitionAgent import RecognitionAgent
 from Agents.RetrainAgent import RetrainAgent
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from ResourceLocalizer import ResourceLocalizer
+from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Server.InterfaceServer import InterfaceServer
 from concurrent import futures
 import json
 import multiprocessing
 
-from Services.RecognitionLocationsManager import RecognitionLocationsManager
 
 global recog_ag_count
 
@@ -41,9 +41,16 @@ if __name__ == "__main__":
 
     recognition_agents = []
     for agent in recognition_agents_config:
-        r = RecognitionAgent(f"{agent['agent-name']}@{agent['agent-server']}", agent['agent-password'], blackboard,
-                             agent['location-to-serve'], agent['model-directory'], agent['model-basename'], executor,
-                             agent['agent-processing-batch-size'], agent['polling-interval'])
+        r = RecognitionAgent(f"{agent['agent-name']}@{agent['agent-server']}",
+                             agent['agent-password'],
+                             blackboard,
+                             agent['location-to-serve'],
+                             agent['model-directory'],
+                             agent['model-basename'],
+                             executor,
+                             agent['agent-processing-batch-size'],
+                             agent['polling-interval'],
+                             agent['message-checking-interval'])
         recognition_agents.append(r)
         agent_locations[r.location_to_serve].append(r)
 
