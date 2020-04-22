@@ -63,7 +63,7 @@ class NewIdentitiesManager(SingletonPerKey):
 
     def __save_images(self, images, directory):
         for i, image in enumerate(images):
-            image.save(path.join(directory, self.__face_image_filename.format(i)))
+            image.save(path.join(directory, self.__face_image_filename.format(i)), 'JPEG')
 
     def __get_location_directory(self, location):
         if location not in self.__source_locations_manager.get_recognition_locations():

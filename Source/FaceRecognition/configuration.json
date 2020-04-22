@@ -78,8 +78,12 @@
   ],
   "max-recognition-workers-count" : 8,
   "max-interface-server-workers-count" : 4,
-  "server-location" : {
+  "interface-server-location" : {
     "ip" : "127.0.0.1",
     "port" : 8888
+  },
+  "register-server-location" : {
+    "ip" : "127.0.0.1",
+    "port" : 5000
   }
 }

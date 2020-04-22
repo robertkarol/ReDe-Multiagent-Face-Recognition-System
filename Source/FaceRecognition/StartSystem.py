@@ -5,6 +5,7 @@ from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from ResourceLocalizer import ResourceLocalizer
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Server.InterfaceServer import InterfaceServer
+from Server.RegisterIdentitiesServer import *
 from concurrent import futures
 import json
 import multiprocessing
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 
     responses = multiprocessing.Queue()
     requests = multiprocessing.Queue()
-    server = InterfaceServer(requests, responses, config['server-location']['ip'], config['server-location']['port'],
+    server = InterfaceServer(requests, responses, config['interface-server-location']['ip'], config['server-location']['port'],
                              config['max-interface-server-workers-count'])
 
     agent_locations = {}
@@ -85,3 +86,4 @@ if __name__ == "__main__":
     start_components(control_agents)
     start_components(recognition_agents)
     start_components(retrain_agents)
+    app.run(host=config['register-server-location']['ip'], port=config['register-server-location']['port'])
