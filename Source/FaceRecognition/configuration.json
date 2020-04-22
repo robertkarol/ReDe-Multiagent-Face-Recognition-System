@@ -62,6 +62,8 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 20,
+      "recognized-threshold" : 0.9,
+      "unrecognized-threshold" : 0.85,
       "polling-interval" : 1
     }
   ],

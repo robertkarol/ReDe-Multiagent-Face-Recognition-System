@@ -1,8 +1,8 @@
-from concurrent.futures.thread import ThreadPoolExecutor
 from Domain.RecognitionRequest import RecognitionRequest
-from Domain.RecognitionResponse import RecognitionResponse
+from Domain.RecognitionResponse import RecognitionResponse, RecognitionOutcome
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
+from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from typing import List, Tuple, Any
@@ -25,18 +25,29 @@ class ControlAgent(Agent):
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
                 print(f"{self.__outer_ref.jid} starting resolving results. . .")
-                # TODO: threshold probability if it should generate outcome
-                await self.__outer_ref.loop.run_in_executor(None,
-                            lambda: self.__outer_ref.interface_server.enqueue_responses(self.__wrap_results(results)))
+                await self.__outer_ref.loop.run_in_executor(
+                    None, lambda: self.__outer_ref.interface_server.enqueue_responses(self.__wrap_results(results)))
                 print(f"{self.__outer_ref.jid} done resolving results. . .")
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending monitoring results. . .")
 
         def __wrap_results(self, results):
-            responses = [(result[0], RecognitionResponse.serialize(RecognitionResponse(result[1][0], result[1][1])))
-                         for result in results]
+            responses = [(result[0][0], self.__get_response(result)) for result in results]
             return responses
+
+        def __get_response(self, result):
+            gen_out, rec_class, proba = result[0][1], result[1][0], result[1][1]
+            if gen_out:
+                if proba < self.__outer_ref.unrecognized_threshold:
+                    outcome = RecognitionOutcome.NOT_RECOGNIZED
+                elif proba >= self.__outer_ref.recognized_threshold:
+                    outcome = RecognitionOutcome.RECOGNIZED
+                else:
+                    outcome = RecognitionOutcome.UNCERTAIN
+            else:
+                outcome = RecognitionOutcome.UNKNOWN
+            RecognitionResponse.serialize(RecognitionResponse(rec_class, proba, outcome))
 
     class RecognitionRequestsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
@@ -48,9 +59,9 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} waiting for requests. . .")
-            requests = await self.__outer_ref.loop.run_in_executor(None,
-                                            lambda: self.__outer_ref.interface_server.dequeue_requests(
-                                                        self.__outer_ref.processing_batch_size))
+            requests = await self.__outer_ref.loop.run_in_executor(
+                None, lambda: self.__outer_ref.interface_server.dequeue_requests(
+                    self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
@@ -58,8 +69,8 @@ class ControlAgent(Agent):
                 for request in requests:
                     recognition_request = RecognitionRequest.deserialize(request[1])
                     print(recognition_request)
-                    self.__outer_ref.blackboard.publish_recognition_request(recognition_request.detection_location,
-                                                                    (request[0], recognition_request))
+                    self.__outer_ref.blackboard.publish_recognition_request(
+                        recognition_request.detection_location, (request[0], recognition_request))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
         async def on_end(self):
@@ -67,6 +78,7 @@ class ControlAgent(Agent):
 
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
                  executor: ThreadPoolExecutor, processing_batch_size: int = 10, polling_interval: float = 1,
+                 recognized_threshold: float = 0.85, unrecognized_threshold: float = 0.65,
                  verify_security: bool = False):
         self.jid = jid
         self.blackboard = blackboard
@@ -76,6 +88,8 @@ class ControlAgent(Agent):
         self.loop.set_default_executor(executor)
         self.processing_batch_size = processing_batch_size
         self.polling_interval = polling_interval
+        self.recognized_threshold = recognized_threshold
+        self.unrecognized_threshold = unrecognized_threshold
         super().__init__(jid, password, verify_security)
 
     async def setup(self):

@@ -65,7 +65,9 @@ if __name__ == "__main__":
                      server,
                      executor,
                      agent['agent-processing-batch-size'],
-                     agent['polling-interval'])
+                     agent['polling-interval'],
+                     agent['recognized-threshold'],
+                     agent['unrecognized-threshold'])
         for agent in control_agents_config
     ]
 

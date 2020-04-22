@@ -1,10 +1,9 @@
-from spade.message import Message
-
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+from spade.message import Message
 import asyncio
 
 
@@ -41,7 +40,7 @@ class RecognitionAgent(Agent):
             agents = []
             faces = []
             for i, req in enumerate(raw_data):
-                agents.append(req[0])
+                agents.append((req[0], req[1].generate_outcome))
                 faces.append(req[1].face_image)
             return agents, faces
 
@@ -75,7 +74,7 @@ class RecognitionAgent(Agent):
             if message.metadata['type'] == 'new_model_available':
                 self.__model = await self.__outer_ref.load_model()
 
-    # TODO: make fields protected, remove outer ref from behaviors and use self.agent; add message_checking_interval to config file
+    # TODO: make fields protected for all agents
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str,
                  model_directory: str, model_basename: str, executor: ThreadPoolExecutor,
                  processing_batch_size: int = 5, polling_interval: float = 1,

@@ -3,7 +3,7 @@ from Services.NewIdentitiesManager import NewIdentitiesManager
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
-from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
+from spade.behaviour import PeriodicBehaviour
 from spade.message import Message
 import asyncio
 
