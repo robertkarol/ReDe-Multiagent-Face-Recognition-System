@@ -72,6 +72,8 @@ class InterfaceServer(multiprocessing.Process):
         while True:
             print("Processing responses...")
             current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            if isinstance(message, str):
+                message = message.encode()
             try:
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
             except ConnectionError:

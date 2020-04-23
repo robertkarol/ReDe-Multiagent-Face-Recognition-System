@@ -31,8 +31,8 @@ if __name__ == "__main__":
 
     responses = multiprocessing.Queue()
     requests = multiprocessing.Queue()
-    server = InterfaceServer(requests, responses, config['interface-server-location']['ip'], config['server-location']['port'],
-                             config['max-interface-server-workers-count'])
+    server = InterfaceServer(requests, responses, config['interface-server-location']['ip'],
+                             config['interface-server-location']['port'], config['max-interface-server-workers-count'])
 
     agent_locations = {}
     for agent in recognition_agents_config:

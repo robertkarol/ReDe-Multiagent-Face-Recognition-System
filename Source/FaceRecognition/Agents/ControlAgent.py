@@ -5,7 +5,6 @@ from Server.InterfaceServer import InterfaceServer
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
-from typing import List, Tuple, Any
 import asyncio
 
 
@@ -47,7 +46,7 @@ class ControlAgent(Agent):
                     outcome = RecognitionOutcome.UNCERTAIN
             else:
                 outcome = RecognitionOutcome.UNKNOWN
-            RecognitionResponse.serialize(RecognitionResponse(rec_class, proba, outcome))
+            return RecognitionResponse.serialize(RecognitionResponse(str(rec_class), proba, outcome.name))
 
     class RecognitionRequestsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
@@ -67,8 +66,7 @@ class ControlAgent(Agent):
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
-                    recognition_request = RecognitionRequest.deserialize(request[1])
-                    print(recognition_request)
+                    recognition_request: RecognitionRequest = RecognitionRequest.deserialize(request[1])
                     self.__outer_ref.blackboard.publish_recognition_request(
                         recognition_request.detection_location, (request[0], recognition_request))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")

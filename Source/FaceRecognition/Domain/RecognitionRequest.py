@@ -1,36 +1,18 @@
-import pickle
+from Utils.Serializable import Serializable
+from dataclasses import dataclass
 
 
-# TODO: Support cross platform serialization
-class RecognitionRequest:
-
-    def __init__(self, agent_name: str, agent_location: str, face_image, generate_outcome: bool = False):
-        self.__agent_name = agent_name
-        self.__agent_location = agent_location
-        self.__face_image = face_image
-        self.__generate_outcome = generate_outcome
-
-    @property
-    def face_image(self):
-        return self.__face_image
-
-    @property
-    def detection_agent(self):
-        return self.__agent_name
-
-    @property
-    def detection_location(self):
-        return self.__agent_location
-
-    @property
-    def generate_outcome(self):
-        return self.__generate_outcome
+@dataclass
+class RecognitionRequest(Serializable):
+    agent_name: str
+    detection_location: str
+    face_image: str
+    generate_outcome: bool
+    base64encoded: bool = False
 
     @classmethod
-    def deserialize(cls, bytes):
-        request = pickle.loads(bytes)
-        return request
-
-    @staticmethod
-    def serialize(request):
-        return pickle.dumps(request)
+    def deserialize(cls, serialization):
+        instance = super().deserialize(serialization)
+        if isinstance(instance, dict):
+            return RecognitionRequest(**instance)
+        return None
