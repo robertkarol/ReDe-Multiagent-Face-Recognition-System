@@ -1,4 +1,5 @@
-import pickle
+from Utils.Serializable import Serializable
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -9,31 +10,15 @@ class RecognitionOutcome(Enum):
     UNKNOWN = 4
 
 
-# TODO: Support cross platform serialization
-class RecognitionResponse:
+@dataclass
+class RecognitionResponse(Serializable):
+    recognized_class: str
+    probability: float
+    outcome: str
 
-    def __init__(self, recognized_class, probability: float, outcome: RecognitionOutcome = RecognitionOutcome.UNKNOWN):
-        self.__recognized_class = recognized_class
-        self.__probability = probability
-        self.__outcome = outcome
-
-    @property
-    def recognized_class(self):
-        return self.__recognized_class
-
-    @property
-    def recognized_class_probability(self):
-        return self.__probability
-
-    @property
-    def recognition_outcome(self):
-        return self.__outcome
-
-    @staticmethod
-    def deserialize(bytes):
-        response = pickle.loads(bytes)
-        return response
-
-    @staticmethod
-    def serialize(response):
-        return pickle.dumps(response)
+    @classmethod
+    def deserialize(cls, serialization):
+        instance = super().deserialize(serialization)
+        if isinstance(instance, dict):
+            return RecognitionResponse(**instance)
+        return None

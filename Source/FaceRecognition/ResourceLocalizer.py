@@ -1,16 +1,8 @@
+from Utils.Singleton import SingletonMeta
 import configparser
 
 
-class ResourceLocalizerMeta(type):
-    _instance = None
-
-    def __call__(self):
-        if self._instance is None:
-            self._instance = super().__call__()
-        return self._instance
-
-
-class ResourceLocalizer(metaclass=ResourceLocalizerMeta):
+class ResourceLocalizer(metaclass=SingletonMeta):
     def __init__(self):
         self.__parser = configparser.ConfigParser()
         self.__parser.read("resources.ini")

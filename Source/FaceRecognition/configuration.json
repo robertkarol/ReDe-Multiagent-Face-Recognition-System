@@ -6,6 +6,7 @@
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
       "polling-interval" : 1,
+      "message-checking-interval" : 10,
       "location-to-serve" : "Arad",
       "model-basename" : "partial2",
       "model-directory" : "./locals"
@@ -16,6 +17,7 @@
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
       "polling-interval" : 1,
+      "message-checking-interval" : 10,
       "location-to-serve" : "Cluj",
       "model-basename" : "partial2",
       "model-directory" : "./locals"
@@ -26,6 +28,7 @@
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
       "polling-interval" : 1,
+      "message-checking-interval" : 10,
       "location-to-serve" : "Timisoara",
       "model-basename" : "partial3",
       "model-directory" : "./locals"
@@ -36,6 +39,7 @@
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
       "polling-interval" : 1,
+      "message-checking-interval" : 10,
       "location-to-serve" : "Oradea",
       "model-basename" : "partial4",
       "model-directory" : "./locals"
@@ -46,24 +50,40 @@
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 4,
       "polling-interval" : 1,
+      "message-checking-interval" : 10,
       "location-to-serve" : "Alba Iulia",
       "model-basename" : "partial5",
       "model-directory" : "./locals"
     }
   ],
   "control-agents" : [
-  {
+    {
       "agent-name" : "robertkarol-ctrl1",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "agent-processing-batch-size" : 20,
+      "recognized-threshold" : 0.9,
+      "unrecognized-threshold" : 0.85,
       "polling-interval" : 1
-  }
+    }
+  ],
+  "retrain-agents" : [
+    {
+      "agent-name" : "robertkarol",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "data-directory" : "./locals",
+      "polling-interval" : 120
+    }
   ],
   "max-recognition-workers-count" : 8,
   "max-interface-server-workers-count" : 4,
-  "server-location" : {
+  "interface-server-location" : {
     "ip" : "127.0.0.1",
     "port" : 8888
+  },
+  "register-server-location" : {
+    "ip" : "127.0.0.1",
+    "port" : 5000
   }
 }

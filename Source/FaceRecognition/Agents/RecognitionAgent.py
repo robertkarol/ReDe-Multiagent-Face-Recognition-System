@@ -1,10 +1,13 @@
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
-from RecognitionModel import RecognitionModel
-from Services.ModelVersioning import ModelVersioning
+from PIL import Image
+from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+from spade.message import Message
 import asyncio
+import codecs
+import io
 
 
 class RecognitionAgent(Agent):
@@ -12,11 +15,10 @@ class RecognitionAgent(Agent):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref: RecognitionAgent = outer_ref
-            self.__model_versioning = ModelVersioning.get_versioning(self.__outer_ref.model_directory)
             self.__model = None
 
         async def on_start(self):
-            self.__model = await self.__load_model()
+            self.__model = await self.__outer_ref.load_model()
             print(f"{self.__outer_ref.jid} starting the monitoring . . .")
 
         async def run(self):
@@ -28,7 +30,6 @@ class RecognitionAgent(Agent):
                 return
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             requesting_agents, faces = self.__unwrap_requests(data)
-            # TODO: Add outcome gerneration if requested so
             results = await self.__outer_ref.loop.run_in_executor(None,
                                                                   lambda: self.__model.predict_from_faces_images(faces))
             self.__outer_ref.blackboard.publish_recognition_results(self.__wrap_results(requesting_agents, results))
@@ -37,19 +38,19 @@ class RecognitionAgent(Agent):
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending the monitoring . . .")
 
-        async def __load_model(self):
-            print(f"{self.__outer_ref.jid} loading model . . .")
-            model = await self.__outer_ref.loop.run_in_executor(None, lambda: self.__model_versioning.get_model(
-                self.__outer_ref.model_basename))
-            print(f"{self.__outer_ref.jid} done loading model . . .")
-            return model
-
         def __unwrap_requests(self, raw_data):
             agents = []
             faces = []
             for i, req in enumerate(raw_data):
-                agents.append(req[0])
-                faces.append(req[1].face_image)
+                agents.append((req[0], req[1].generate_outcome))
+                serialized_image = req[1].face_image
+                if req[1].base64encoded:
+                    serialized_image = codecs.decode(serialized_image.encode(), 'base64')
+                else:
+                    serialized_image = bytes.fromhex(serialized_image)
+                serialized_image = io.BytesIO(serialized_image)
+                serialized_image.seek(0)
+                faces.append(Image.open(serialized_image))
             return agents, faces
 
         def __wrap_results(self, agents, raw_results):
@@ -58,9 +59,35 @@ class RecognitionAgent(Agent):
                 results.append((agents[i], res))
             return results
 
+    class MessageReceiverBehavior(CyclicBehaviour):
+        def __init__(self, outer_ref):
+            super().__init__()
+            self.__outer_ref: RecognitionAgent = outer_ref
+
+        async def on_start(self):
+            print(f"{self.__outer_ref.jid} starting the message receiver. . .")
+
+        async def run(self):
+            print(f"{self.__outer_ref.jid} checking for message. . .")
+            message = await self.receive()
+            print(f"{self.__outer_ref.jid} processing message. . .")
+            if message:
+                await self.__process_message(message)
+            print(f"{self.__outer_ref.jid} done processing message. . .")
+            await asyncio.sleep(self.__outer_ref.message_checking_interval)
+
+        async def on_end(self):
+            print(f"{self.__outer_ref.jid} ending the message receiver. . .")
+
+        async def __process_message(self, message: Message):
+            if message.metadata['type'] == 'new_model_available':
+                self.__model = await self.__outer_ref.load_model()
+
+    # TODO: make fields protected for all agents
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str,
                  model_directory: str, model_basename: str, executor: ThreadPoolExecutor,
-                 processing_batch_size: int = 5, polling_interval: float = 1, verify_security: bool = False):
+                 processing_batch_size: int = 5, polling_interval: float = 1,
+                 message_checking_interval: int = 5, verify_security: bool = False):
         self.jid = jid
         self.password = password
         self.blackboard = blackboard
@@ -71,9 +98,19 @@ class RecognitionAgent(Agent):
         self.loop.set_default_executor(executor)
         self.processing_batch_size = processing_batch_size
         self.polling_interval = polling_interval
+        self.message_checking_interval = message_checking_interval
+        self.__model_manager = ModelManager.get_manager(self.model_directory)
         super().__init__(jid, password, verify_security)
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
-        b = self.MonitoringRecognitionRequestsBehavior(self)
-        self.add_behaviour(b)
+        rec_behav = self.MonitoringRecognitionRequestsBehavior(self)
+        msg_behav = self.MessageReceiverBehavior(self)
+        self.add_behaviour(rec_behav)
+        self.add_behaviour(msg_behav)
+
+    async def load_model(self):
+        print(f"{self.jid} loading model {self.model_basename} . . .")
+        model = await self.loop.run_in_executor(None, lambda: self.__model_manager.get_model(self.model_basename))
+        print(f"{self.jid} done loading model {self.model_basename} . . .")
+        return model

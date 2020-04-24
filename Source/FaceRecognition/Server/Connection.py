@@ -1,4 +1,3 @@
-
 class Connection:
     def __init__(self, conn_id, reader_stream, writer_stream, byte_order='big'):
         self.__conn_id = conn_id
