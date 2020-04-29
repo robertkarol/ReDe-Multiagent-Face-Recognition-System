@@ -11,6 +11,7 @@
 #include <NIVisionExtLib.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "FaceDetection.h"
+
 using namespace std;
 using namespace cv;
 
@@ -66,6 +67,40 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(	const char * faceCascadePath
 	ProcessNIError(error, errorHandle);
 }
 
+void FillExistingFaces(NIArray1D<LV_Rect>& facesRect, Mat& matGray)
+{
+	if (facesRect.size > 0)
+	{
+		vector<LV_Rect> existingFaces;
+		facesRect.ToVector(existingFaces);
+
+		for (const auto& face : existingFaces)
+		{
+			auto topLeft = Point(face.left, face.top);
+			auto bottomRight = Point(face.right, face.bottom);
+			rectangle(matGray, topLeft, bottomRight, cv::Scalar(0, 255, 0), cv::FILLED);
+		}
+	}
+}
+
+vector<LV_Rect> TryFilterOutFalsePositives(vector<Rect> faces, Mat& matGray, double scaleFactor, int minNeighbors)
+{
+	LV_Rect faceLV;
+	vector<LV_Rect> facesLV;
+
+	for (vector<Rect>::iterator face = faces.begin(); face != faces.end(); ++face)
+	{
+		vector<Rect> reallyFaces;
+		auto faceToTest = matGray(*face);
+		faceCheckerCascadeClassifier.detectMultiScale(faceToTest, reallyFaces, scaleFactor, minNeighbors, 0 | CASCADE_SCALE_IMAGE);
+		if (reallyFaces.size() == 0) continue;
+		Convert(*face, faceLV);
+		facesLV.push_back(faceLV);
+	}
+
+	return facesLV;
+}
+
 EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, 
 												NIArrayHandle facesRectLV, 
 												NIArrayHandle eyesRectLV, 
@@ -81,47 +116,26 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle,
     try
 	{
         NIImage source(sourceHandle);        
-        NIArray1D<LV_Rect> facesRect(facesRectLV);
-		
-		//Do image conversions
-        vector<Rect> faces;
-        vector<LV_Rect> facesLV;
         Mat sourceMat;
         ThrowNIError(source.ImageToMat(sourceMat));
 		auto matGray = Mat2MatGray(sourceMat);
-		if (facesRect.size > 0)
-		{
-			vector<LV_Rect> existingFaces;
-			facesRect.ToVector(existingFaces);
 
-			for (const auto& face : existingFaces)
-			{
-				auto topLeft = Point(face.left, face.top);
-				auto bottomRight = Point(face.right, face.bottom);
-				rectangle(matGray, topLeft, bottomRight, cv::Scalar(0, 255, 0), cv::FILLED);
-			}
-		}
-	
-		//Detect faces
+        NIArray1D<LV_Rect> facesRect(facesRectLV);
+		FillExistingFaces(facesRect, matGray);
+
+        vector<Rect> faces;
         faceCascadeClassifier.detectMultiScale(matGray, faces, scaleFactor, minNeighbors, 
 			0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth), Size(maxWidth, maxWidth));
         
-		LV_Rect faceLV;
+		vector<LV_Rect> facesLV;
 		if (faces.size()) 
 		{
-			for (vector<Rect>::iterator face = faces.begin(); face != faces.end(); face++) 
-			{
-				vector<Rect> reallyFaces;
-				auto faceToTest = matGray(*face);
-				faceCheckerCascadeClassifier.detectMultiScale(faceToTest, reallyFaces, scaleFactor, minNeighbors, 0 | CASCADE_SCALE_IMAGE);
-				if (reallyFaces.size() == 0) continue;
-				Convert(*face, faceLV);
-				facesLV.push_back(faceLV);
-			}
+			facesLV = TryFilterOutFalsePositives(faces, matGray, scaleFactor, minNeighbors);
 		}
         facesRect.SetArray(facesLV);
+
     }
-    catch (NIERROR _err)
+    catch (NIERROR& _err)
 	{
         error = _err;
     }
