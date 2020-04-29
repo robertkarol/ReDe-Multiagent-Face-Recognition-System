@@ -18,11 +18,10 @@ typedef cv::Point2f PointFloat;
 typedef cv::Point2d PointDouble;
 
 static CascadeClassifier faceCascadeClassifier;
-static CascadeClassifier lbpCascadeClassifier;
-static CascadeClassifier eyesCascadeClassfier;
-static bool bEyeClassifierLoaded = false;
+static CascadeClassifier faceCheckerCascadeClassifier;
 
-void Convert(const Rect& rect, LV_Rect& lvRect){
+void Convert(const Rect& rect, LV_Rect& lvRect)
+{
     lvRect.left = rect.x;
     lvRect.top = rect.y;
     lvRect.right = rect.x + rect.width - 1;
@@ -30,29 +29,41 @@ void Convert(const Rect& rect, LV_Rect& lvRect){
     lvRect.angle = 0;
 }
 
+Mat Mat2MatGray(Mat colorMat)
+{
+	Mat matGray;
+
+	if (colorMat.type() != CV_8UC1)
+	{
+		cvtColor(colorMat, matGray, COLOR_BGR2GRAY);
+	}
+	else
+	{
+		matGray = colorMat.clone();
+	}
+	equalizeHist(matGray, matGray);
+
+	return matGray;
+}
+
 EXTERN_C void NI_EXPORT NIVisOpenCV_LoadClassifier(	const char * faceCascadePath,
-													const char * eyesCascadePath,
+													const char * faceCheckerCascadePath,
 													NIErrorHandle errorHandle)
 {
 	ReturnOnPreviousError(errorHandle);
+	NIERROR error = NI_ERR_SUCCESS;
 	String faceCascadeString = faceCascadePath;
 	if (!faceCascadeClassifier.load(faceCascadeString))
 	{
-		return;
+		error = NI_ERR_OCV_USER;
 	}
-	String lbpCascadeString = "E:\\Licenta\\trip-validation-system\\Resources\\lbpcascade_frontalface.xml";
-	if (!lbpCascadeClassifier.load(lbpCascadeString))
+	ProcessNIError(error, errorHandle);
+	String faceCheckerCascadeString = faceCheckerCascadePath;
+	if (!faceCheckerCascadeClassifier.load(faceCheckerCascadeString))
 	{
-		return;
+		error = NI_ERR_OCV_USER;
 	}
-	String eyesCascadeString = eyesCascadePath;
-	if (eyesCascadePath != NULL && eyesCascadeString.length() > 1)
-	{
-		if (!eyesCascadeClassfier.load(eyesCascadeString))
-		{
-			return;
-		}
-	}
+	ProcessNIError(error, errorHandle);
 }
 
 EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle, 
@@ -76,20 +87,8 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle,
         vector<Rect> faces;
         vector<LV_Rect> facesLV;
         Mat sourceMat;
-        Mat faceImage;
         ThrowNIError(source.ImageToMat(sourceMat));
-		
-        Mat matGray;
-		
-		if (sourceMat.type() != CV_8UC1) 
-		{
-			cvtColor(sourceMat, matGray, COLOR_BGR2GRAY);
-		}
-		else 
-		{
-			matGray = sourceMat.clone();
-		}
-
+		auto matGray = Mat2MatGray(sourceMat);
 		if (facesRect.size > 0)
 		{
 			vector<LV_Rect> existingFaces;
@@ -102,27 +101,21 @@ EXTERN_C void NI_EXPORT NIVisOpenCV_DetectFaces(NIImageHandle sourceHandle,
 				rectangle(matGray, topLeft, bottomRight, cv::Scalar(0, 255, 0), cv::FILLED);
 			}
 		}
-		//rectangle(sourceMat, Point(100, 100), Point(50, 50), cv::Scalar(0, 255, 0), cv::FILLED);
-		//imwrite("wtfdidiget.jpg", sourceMat);
-		//Equalize image
-        equalizeHist(matGray, matGray);
-		
+	
 		//Detect faces
         faceCascadeClassifier.detectMultiScale(matGray, faces, scaleFactor, minNeighbors, 
 			0 | CASCADE_SCALE_IMAGE, Size(minWidth, minWidth), Size(maxWidth, maxWidth));
         
-		//facesLV.resize(faces.size());
 		LV_Rect faceLV;
-        vector<LV_Rect>::iterator fLV = facesLV.begin();
 		if (faces.size()) 
 		{
-			for (vector<Rect>::iterator f = faces.begin(); f != faces.end(); f++) 
+			for (vector<Rect>::iterator face = faces.begin(); face != faces.end(); face++) 
 			{
 				vector<Rect> reallyFaces;
-				auto faceToTest = matGray(*f);
-				lbpCascadeClassifier.detectMultiScale(faceToTest, reallyFaces, scaleFactor, minNeighbors, 0 | CASCADE_SCALE_IMAGE);
+				auto faceToTest = matGray(*face);
+				faceCheckerCascadeClassifier.detectMultiScale(faceToTest, reallyFaces, scaleFactor, minNeighbors, 0 | CASCADE_SCALE_IMAGE);
 				if (reallyFaces.size() == 0) continue;
-				Convert(*f, faceLV);
+				Convert(*face, faceLV);
 				facesLV.push_back(faceLV);
 			}
 		}
@@ -150,18 +143,10 @@ void NI_EXPORT NIVisOpenCV_ContainsFace(NIImageHandle sourceHandle,
 	Mat sourceMat;
 	NIImage source(sourceHandle);
 	ThrowNIError(source.ImageToMat(sourceMat));
-	Mat matGray;
-	if (sourceMat.type() != CV_8UC1)
-	{
-		cvtColor(sourceMat, matGray, COLOR_BGR2GRAY);
-	}
-	else
-	{
-		matGray = sourceMat.clone();
-	}
-	equalizeHist(matGray, matGray);
+	auto matGray = Mat2MatGray(sourceMat);
+
 	vector<Rect> faces;
-	lbpCascadeClassifier.detectMultiScale(matGray, faces, scaleFactor, minNeighbors,
+	faceCheckerCascadeClassifier.detectMultiScale(matGray, faces, scaleFactor, minNeighbors,
 		0 | CASCADE_SCALE_IMAGE, Size(matGray.cols / 4, matGray.rows / 4), Size(matGray.cols, matGray.rows));
 	ProcessNIError(error, errorHandle);
 	*containsFace = faces.size() > 0;
