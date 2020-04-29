@@ -10,7 +10,7 @@ class ConnectionManager:
 
     def register_connection(self, reader_stream, writer_stream) -> Connection:
         conn_id = self.__get_random_alphanumeric_string(self.__conn_id_len)
-        conn = Connection(conn_id, reader_stream, writer_stream)
+        conn = Connection(conn_id, reader_stream, writer_stream, 'little')
         self.__connections[conn_id] = conn
         return conn
 
