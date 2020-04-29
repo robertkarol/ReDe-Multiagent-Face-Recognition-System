@@ -76,6 +76,7 @@ class InterfaceServer(multiprocessing.Process):
                 message = message.encode()
             try:
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
+                print(f"Sent: {message}")
             except ConnectionError:
                 break
-            print(f"Sending: {message}")
+        print("Ending processing responses...")
