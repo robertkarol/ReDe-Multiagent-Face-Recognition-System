@@ -70,12 +70,11 @@ class RecognitionAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} checking for message. . .")
-            message = await self.receive()
+            message = await self.receive(self.__outer_ref.message_checking_interval)
             if message:
                 print(f"{self.__outer_ref.jid} processing message. . .")
                 await self.__process_message(message)
                 print(f"{self.__outer_ref.jid} done processing message. . .")
-            await asyncio.sleep(self.__outer_ref.message_checking_interval)
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending the message receiver. . .")

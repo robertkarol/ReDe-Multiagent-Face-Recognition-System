@@ -17,6 +17,7 @@ class InterfaceServer(multiprocessing.Process):
         self.__max_threads_count = max_threads_count
         self.__loop = None
         self.__connection_manager = ConnectionManager()
+        self.__stop = False
 
     def enqueue_responses(self, responses: Iterable) -> None:
         for res in responses:
@@ -43,8 +44,8 @@ class InterfaceServer(multiprocessing.Process):
             asyncio.ensure_future(self.__responses_handler())
             asyncio.ensure_future(self.__start_requests_server())
             self.__loop.run_forever()
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             self.__loop.close()
 
@@ -56,8 +57,8 @@ class InterfaceServer(multiprocessing.Process):
 
     async def __requests_handler(self, reader, writer):
         current_conn = self.__connection_manager.register_connection(reader, writer)
-        while True:
-            print("Processing requests...")
+        print("Processing requests...")
+        while not self.__stop:
             try:
                 data = await current_conn.read_data()
             except ConnectionError:
@@ -69,7 +70,7 @@ class InterfaceServer(multiprocessing.Process):
         print("Ending processing requests...")
 
     async def __responses_handler(self):
-        while True:
+        while not self.__stop:
             print("Processing responses...")
             current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
             if isinstance(message, str):
@@ -78,5 +79,9 @@ class InterfaceServer(multiprocessing.Process):
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
                 print(f"Sent: {message}")
             except ConnectionError:
-                break
+                pass
         print("Ending processing responses...")
+
+    def kill(self):
+        super().kill()
+        self.__stop = True
