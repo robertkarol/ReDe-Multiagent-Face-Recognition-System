@@ -23,8 +23,8 @@ class RecognitionAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling. . .")
-            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
-                                                                        self.__outer_ref.processing_batch_size)
+            data = await self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
+                                                                              self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
                 return
@@ -32,7 +32,8 @@ class RecognitionAgent(Agent):
             requesting_agents, faces = self.__unwrap_requests(data)
             results = await self.__outer_ref.loop.run_in_executor(None,
                                                                   lambda: self.__model.predict_from_faces_images(faces))
-            self.__outer_ref.blackboard.publish_recognition_results(self.__wrap_results(requesting_agents, results))
+            await self.__outer_ref.blackboard.publish_recognition_results(
+                self.__wrap_results(requesting_agents, results))
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
@@ -70,10 +71,10 @@ class RecognitionAgent(Agent):
         async def run(self):
             print(f"{self.__outer_ref.jid} checking for message. . .")
             message = await self.receive()
-            print(f"{self.__outer_ref.jid} processing message. . .")
             if message:
+                print(f"{self.__outer_ref.jid} processing message. . .")
                 await self.__process_message(message)
-            print(f"{self.__outer_ref.jid} done processing message. . .")
+                print(f"{self.__outer_ref.jid} done processing message. . .")
             await asyncio.sleep(self.__outer_ref.message_checking_interval)
 
         async def on_end(self):

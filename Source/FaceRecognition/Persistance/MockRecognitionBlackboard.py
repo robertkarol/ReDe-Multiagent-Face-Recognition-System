@@ -21,11 +21,11 @@ class MockRecognitionBlackboard(RecognitionBlackboard):
         self.__fake_add_agent_to_respond(agent3)
         self.__fake_add_agent_to_respond(agent4)
         self.__fake_add_agent_to_respond(agent5)
-        super().publish_recognition_requests(1, agent1)
-        super().publish_recognition_requests(2, agent2)
-        super().publish_recognition_requests(3, agent3)
-        super().publish_recognition_requests(4, agent4)
-        super().publish_recognition_requests(5, agent5)
+        await super().publish_recognition_requests(1, agent1)
+        await super().publish_recognition_requests(2, agent2)
+        await super().publish_recognition_requests(3, agent3)
+        await super().publish_recognition_requests(4, agent4)
+        await super().publish_recognition_requests(5, agent5)
 
     def __fake_add_agent_to_respond(self, agent_images):
         for i in range(len(agent_images)):

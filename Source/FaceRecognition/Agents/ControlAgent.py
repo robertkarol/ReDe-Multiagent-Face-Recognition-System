@@ -19,7 +19,7 @@ class ControlAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling for results. . .")
-            results = self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
+            results = await self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
             if len(results) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
@@ -67,7 +67,7 @@ class ControlAgent(Agent):
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
                     recognition_request: RecognitionRequest = RecognitionRequest.deserialize(request[1])
-                    self.__outer_ref.blackboard.publish_recognition_request(
+                    await self.__outer_ref.blackboard.publish_recognition_request(
                         recognition_request.detection_location, (request[0], recognition_request))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
