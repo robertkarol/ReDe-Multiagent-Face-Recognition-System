@@ -59,7 +59,7 @@ class RecognitionAgent(Agent):
         def __unwrap_requests(self, raw_data):
             agents = []
             faces = []
-            for i, request in enumerate(raw_data):
+            for request in raw_data:
                 conn, request = request.connection_id, request.recognition_request
                 agents.append((conn, request.generate_outcome))
                 serialized_image = request.face_image

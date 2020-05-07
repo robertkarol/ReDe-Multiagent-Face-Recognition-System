@@ -26,8 +26,8 @@ class NotifierDeque(deque):
         super().appendleft(x)
 
     @wait_event(cond=lambda x: len(x) == 0)
-    async def pop(self, i: int = ...):
-        return super().pop(i)
+    async def pop(self):
+        return super().pop()
 
     @wait_event(cond=lambda x: len(x) == 0)
     async def popleft(self):
