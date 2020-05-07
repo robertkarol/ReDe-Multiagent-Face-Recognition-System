@@ -1,3 +1,4 @@
+from Domain.DTO import RecognitionRequestDTO
 from Domain.RecognitionRequest import RecognitionRequest
 from Domain.RecognitionResponse import RecognitionResponse, RecognitionOutcome
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
@@ -32,12 +33,14 @@ class ControlAgent(Agent):
             print(f"{self.__outer_ref.jid} ending monitoring results. . .")
 
         def __wrap_results(self, results):
-            responses = [(result[0][0], self.__get_response(result)) for result in results]
-            return responses
+            for result in results:
+                result.recognition_result = self.__get_response(result)
+            return results
 
         def __get_response(self, result):
-            gen_out, rec_class, proba = result[0][1], result[1][0], result[1][1]
-            if gen_out:
+            generate_outcome, recognized_class, proba = result.generate_outcome, result.recognition_result[0], \
+                                        result.recognition_result[1]
+            if generate_outcome:
                 if proba < self.__outer_ref.unrecognized_threshold:
                     outcome = RecognitionOutcome.NOT_RECOGNIZED
                 elif proba >= self.__outer_ref.recognized_threshold:
@@ -46,7 +49,7 @@ class ControlAgent(Agent):
                     outcome = RecognitionOutcome.UNCERTAIN
             else:
                 outcome = RecognitionOutcome.UNKNOWN
-            return RecognitionResponse.serialize(RecognitionResponse(str(rec_class), proba, outcome.name))
+            return RecognitionResponse.serialize(RecognitionResponse(str(recognized_class), proba, outcome.name))
 
     class RecognitionRequestsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
@@ -66,9 +69,11 @@ class ControlAgent(Agent):
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
-                    recognition_request: RecognitionRequest = RecognitionRequest.deserialize(request[1])
+                    recognition_request: RecognitionRequest = \
+                        RecognitionRequest.deserialize(request.recognition_request)
                     await self.__outer_ref.blackboard.publish_recognition_request(
-                        recognition_request.detection_location, (request[0], recognition_request))
+                        recognition_request.detection_location,
+                        RecognitionRequestDTO(request.connection_id, recognition_request))
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
 
         async def on_end(self):

@@ -1,3 +1,4 @@
+from Domain.DTO import RecognitionResultDTO
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from PIL import Image
 from Services.ModelManager import ModelManager
@@ -42,10 +43,11 @@ class RecognitionAgent(Agent):
         def __unwrap_requests(self, raw_data):
             agents = []
             faces = []
-            for i, req in enumerate(raw_data):
-                agents.append((req[0], req[1].generate_outcome))
-                serialized_image = req[1].face_image
-                if req[1].base64encoded:
+            for i, request in enumerate(raw_data):
+                conn, request = request.connection_id, request.recognition_request
+                agents.append((conn, request.generate_outcome))
+                serialized_image = request.face_image
+                if request.base64encoded:
                     serialized_image = codecs.decode(serialized_image.encode(), 'base64')
                 else:
                     serialized_image = bytes.fromhex(serialized_image)
@@ -57,7 +59,7 @@ class RecognitionAgent(Agent):
         def __wrap_results(self, agents, raw_results):
             results = []
             for i, res in enumerate(raw_results):
-                results.append((agents[i], res))
+                results.append(RecognitionResultDTO(agents[i][0], agents[i][1], res))
             return results
 
     class MessageReceiverBehavior(CyclicBehaviour):

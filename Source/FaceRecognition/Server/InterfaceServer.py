@@ -1,3 +1,4 @@
+from Domain.DTO import RecognitionRequestDTO
 from Server.ConnectionManager import ConnectionManager
 from concurrent import futures
 from typing import Iterable
@@ -65,14 +66,15 @@ class InterfaceServer(multiprocessing.Process):
                 break
             if not data:
                 break
-            self.__requests.put((current_conn.connection_id, data))
+            self.__requests.put(RecognitionRequestDTO(current_conn.connection_id, data))
         self.__connection_manager.unregister_connection(current_conn.connection_id)
         print("Ending processing requests...")
 
     async def __responses_handler(self):
         while not self.__stop:
             print("Processing responses...")
-            current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            response = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            current_conn, message = response.connection_id, response.recognition_result
             if isinstance(message, str):
                 message = message.encode()
             try:
