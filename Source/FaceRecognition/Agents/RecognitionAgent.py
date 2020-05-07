@@ -12,6 +12,14 @@ import io
 
 
 class RecognitionAgent(Agent):
+
+    @staticmethod
+    def get_agent_clone(agent):
+        return RecognitionAgent(str(agent.jid), agent.password, agent.blackboard, agent.location_to_serve,
+                                agent.model_directory, agent.model_basename, None,
+                                agent.processing_batch_size, agent.polling_interval, agent.message_checking_interval,
+                                agent.verify_security)
+
     class MonitoringRecognitionRequestsBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
@@ -19,7 +27,11 @@ class RecognitionAgent(Agent):
             self.__model = None
 
         async def on_start(self):
-            self.__model = await self.__outer_ref.load_model()
+            try:
+                self.__model = await self.__outer_ref.load_model()
+            except Exception as e:
+                print(e)
+                self.kill()
             print(f"{self.__outer_ref.jid} starting the monitoring . . .")
 
         async def run(self):
@@ -31,10 +43,14 @@ class RecognitionAgent(Agent):
                 return
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             requesting_agents, faces = self.__unwrap_requests(data)
-            results = await self.__outer_ref.loop.run_in_executor(None,
-                                                                  lambda: self.__model.predict_from_faces_images(faces))
-            await self.__outer_ref.blackboard.publish_recognition_results(
-                self.__wrap_results(requesting_agents, results))
+            try:
+                results = \
+                    await self.__outer_ref.loop.run_in_executor(None,
+                                                                lambda: self.__model.predict_from_faces_images(faces))
+                await self.__outer_ref.blackboard.publish_recognition_results(
+                    self.__wrap_results(requesting_agents, results))
+            except Exception as e:
+                print(e)
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
@@ -97,7 +113,8 @@ class RecognitionAgent(Agent):
         self.model_directory = model_directory
         self.model_basename = model_basename
         self.loop = asyncio.get_event_loop()
-        self.loop.set_default_executor(executor)
+        if executor:
+            self.loop.set_default_executor(executor)
         self.processing_batch_size = processing_batch_size
         self.polling_interval = polling_interval
         self.message_checking_interval = message_checking_interval

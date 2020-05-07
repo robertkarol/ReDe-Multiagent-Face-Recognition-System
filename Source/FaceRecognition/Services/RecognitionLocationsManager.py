@@ -1,5 +1,4 @@
 from Agents.RecognitionAgent import RecognitionAgent
-from Domain.DTO import RecognitionAgentDTO
 from Utils.Singleton import SingletonMeta
 
 
@@ -19,11 +18,13 @@ class RecognitionLocationsManager(metaclass=SingletonMeta):
         del self.__locations[location]
 
     def add_recognition_agents(self, location, agents: list):
-        self.__locations[location].extend([RecognitionAgentDTO(str(agent.jid), agent.model_directory,
-                                                               agent.model_basename) for agent in agents])
+        self.__locations[location].extend(agents)
 
     def add_recognition_agent(self, location, agent: RecognitionAgent):
         self.add_recognition_agents(location, [agent])
+
+    def remove_recognition_agent(self, location, agent: RecognitionAgent):
+        self.__locations[location].remove(agent)
 
     def register_and_set_from_dictionary(self, location_agents_dict):
         for location in location_agents_dict:

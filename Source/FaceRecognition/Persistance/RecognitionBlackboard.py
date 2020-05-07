@@ -1,7 +1,5 @@
-from collections import deque
-from typing import Iterable
-
 from Utils.NotifierDeque import NotifierDeque
+from typing import Iterable
 
 
 class RecognitionBlackboard:
@@ -50,3 +48,6 @@ class RecognitionBlackboard:
 
     async def __enqueue_elements(self, queue_id, elements):
         await self.__queues[queue_id].extend(elements)
+
+    def get_load_information(self):
+        return {queue_name: len(queue) for (queue_name, queue) in self.__queues.items()}

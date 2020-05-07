@@ -64,6 +64,8 @@
       "agent-processing-batch-size" : 20,
       "recognized-threshold" : 0.9,
       "unrecognized-threshold" : 0.85,
+      "max-agent-load" : 100,
+      "load-checking-interval" : 5,
       "polling-interval" : 1
     }
   ],

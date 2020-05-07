@@ -5,13 +5,10 @@ from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from ResourceLocalizer import ResourceLocalizer
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Server.InterfaceServer import InterfaceServer
-from Server.RegisterIdentitiesServer import *
+from Server.RegisterIdentitiesServer import app
 from concurrent import futures
 import json
 import multiprocessing
-
-
-global recog_ag_count
 
 
 def start_components(components):
@@ -57,7 +54,6 @@ if __name__ == "__main__":
 
     recognition_locations_manager = RecognitionLocationsManager()
     recognition_locations_manager.register_and_set_from_dictionary(agent_locations)
-    recog_ag_count = len(recognition_agents)
 
     control_agents = [
         ControlAgent(f"{agent['agent-name']}@{agent['agent-server']}",
@@ -65,10 +61,13 @@ if __name__ == "__main__":
                      blackboard,
                      server,
                      executor,
+                     recognition_locations_manager,
                      agent['agent-processing-batch-size'],
                      agent['polling-interval'],
                      agent['recognized-threshold'],
-                     agent['unrecognized-threshold'])
+                     agent['unrecognized-threshold'],
+                     agent['max-agent-load'],
+                     agent['load-checking-interval'])
         for agent in control_agents_config
     ]
 
