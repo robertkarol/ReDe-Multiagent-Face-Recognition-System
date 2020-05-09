@@ -1,6 +1,5 @@
 from Server.Connection import Connection
-import random
-import string
+from Utils.StringUtils import get_random_alphanumeric_string
 
 
 class ConnectionManager:
@@ -9,7 +8,7 @@ class ConnectionManager:
         self.__connections = {}
 
     def register_connection(self, reader_stream, writer_stream) -> Connection:
-        conn_id = self.__get_random_alphanumeric_string(self.__conn_id_len)
+        conn_id = get_random_alphanumeric_string(self.__conn_id_len)
         conn = Connection(conn_id, reader_stream, writer_stream)
         self.__connections[conn_id] = conn
         return conn
@@ -28,7 +27,3 @@ class ConnectionManager:
         except KeyError:
             raise ConnectionError(f"No connection with id {conn_id}")
         return conn
-
-    def __get_random_alphanumeric_string(self, string_length):
-        charset = string.ascii_letters + string.digits
-        return ''.join((random.choice(charset) for _ in range(string_length)))
