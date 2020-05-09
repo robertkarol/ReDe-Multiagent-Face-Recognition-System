@@ -1,3 +1,4 @@
+from Domain.DTO import RecognitionResultDTO
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from PIL import Image
 from Services.ModelManager import ModelManager
@@ -11,6 +12,14 @@ import io
 
 
 class RecognitionAgent(Agent):
+
+    @staticmethod
+    def get_agent_clone(agent):
+        return RecognitionAgent(str(agent.jid), agent.password, agent.blackboard, agent.location_to_serve,
+                                agent.model_directory, agent.model_basename, None,
+                                agent.processing_batch_size, agent.polling_interval, agent.message_checking_interval,
+                                agent.verify_security)
+
     class MonitoringRecognitionRequestsBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
@@ -18,21 +27,30 @@ class RecognitionAgent(Agent):
             self.__model = None
 
         async def on_start(self):
-            self.__model = await self.__outer_ref.load_model()
+            try:
+                self.__model = await self.__outer_ref.load_model()
+            except Exception as e:
+                print(e)
+                self.kill()
             print(f"{self.__outer_ref.jid} starting the monitoring . . .")
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling. . .")
-            data = self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
-                                                                        self.__outer_ref.processing_batch_size)
+            data = await self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
+                                                                              self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
                 return
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             requesting_agents, faces = self.__unwrap_requests(data)
-            results = await self.__outer_ref.loop.run_in_executor(None,
-                                                                  lambda: self.__model.predict_from_faces_images(faces))
-            self.__outer_ref.blackboard.publish_recognition_results(self.__wrap_results(requesting_agents, results))
+            try:
+                results = \
+                    await self.__outer_ref.loop.run_in_executor(None,
+                                                                lambda: self.__model.predict_from_faces_images(faces))
+                await self.__outer_ref.blackboard.publish_recognition_results(
+                    self.__wrap_results(requesting_agents, results))
+            except Exception as e:
+                print(e)
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
@@ -41,10 +59,11 @@ class RecognitionAgent(Agent):
         def __unwrap_requests(self, raw_data):
             agents = []
             faces = []
-            for i, req in enumerate(raw_data):
-                agents.append((req[0], req[1].generate_outcome))
-                serialized_image = req[1].face_image
-                if req[1].base64encoded:
+            for request in raw_data:
+                conn, request = request.connection_id, request.recognition_request
+                agents.append((conn, request.generate_outcome))
+                serialized_image = request.face_image
+                if request.base64encoded:
                     serialized_image = codecs.decode(serialized_image.encode(), 'base64')
                 else:
                     serialized_image = bytes.fromhex(serialized_image)
@@ -56,7 +75,7 @@ class RecognitionAgent(Agent):
         def __wrap_results(self, agents, raw_results):
             results = []
             for i, res in enumerate(raw_results):
-                results.append((agents[i], res))
+                results.append(RecognitionResultDTO(agents[i][0], agents[i][1], res))
             return results
 
     class MessageReceiverBehavior(CyclicBehaviour):
@@ -69,12 +88,11 @@ class RecognitionAgent(Agent):
 
         async def run(self):
             print(f"{self.__outer_ref.jid} checking for message. . .")
-            message = await self.receive()
-            print(f"{self.__outer_ref.jid} processing message. . .")
+            message = await self.receive(self.__outer_ref.message_checking_interval)
             if message:
+                print(f"{self.__outer_ref.jid} processing message. . .")
                 await self.__process_message(message)
-            print(f"{self.__outer_ref.jid} done processing message. . .")
-            await asyncio.sleep(self.__outer_ref.message_checking_interval)
+                print(f"{self.__outer_ref.jid} done processing message. . .")
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending the message receiver. . .")
@@ -95,7 +113,8 @@ class RecognitionAgent(Agent):
         self.model_directory = model_directory
         self.model_basename = model_basename
         self.loop = asyncio.get_event_loop()
-        self.loop.set_default_executor(executor)
+        if executor:
+            self.loop.set_default_executor(executor)
         self.processing_batch_size = processing_batch_size
         self.polling_interval = polling_interval
         self.message_checking_interval = message_checking_interval

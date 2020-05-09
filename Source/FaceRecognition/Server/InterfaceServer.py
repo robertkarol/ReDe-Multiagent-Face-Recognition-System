@@ -1,3 +1,4 @@
+from Domain.DTO import RecognitionRequestDTO
 from Server.ConnectionManager import ConnectionManager
 from concurrent import futures
 from typing import Iterable
@@ -17,6 +18,7 @@ class InterfaceServer(multiprocessing.Process):
         self.__max_threads_count = max_threads_count
         self.__loop = None
         self.__connection_manager = ConnectionManager()
+        self.__stop = False
 
     def enqueue_responses(self, responses: Iterable) -> None:
         for res in responses:
@@ -43,8 +45,8 @@ class InterfaceServer(multiprocessing.Process):
             asyncio.ensure_future(self.__responses_handler())
             asyncio.ensure_future(self.__start_requests_server())
             self.__loop.run_forever()
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             self.__loop.close()
 
@@ -56,27 +58,32 @@ class InterfaceServer(multiprocessing.Process):
 
     async def __requests_handler(self, reader, writer):
         current_conn = self.__connection_manager.register_connection(reader, writer)
-        while True:
-            print("Processing requests...")
+        print("Processing requests...")
+        while not self.__stop:
             try:
                 data = await current_conn.read_data()
             except ConnectionError:
                 break
             if not data:
                 break
-            self.__requests.put((current_conn.connection_id, data))
+            self.__requests.put(RecognitionRequestDTO(current_conn.connection_id, data))
         self.__connection_manager.unregister_connection(current_conn.connection_id)
         print("Ending processing requests...")
 
     async def __responses_handler(self):
-        while True:
+        while not self.__stop:
             print("Processing responses...")
-            current_conn, message = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            response = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
+            current_conn, message = response.connection_id, response.recognition_result
             if isinstance(message, str):
                 message = message.encode()
             try:
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
                 print(f"Sent: {message}")
             except ConnectionError:
-                break
+                pass
         print("Ending processing responses...")
+
+    def kill(self):
+        super().kill()
+        self.__stop = True
