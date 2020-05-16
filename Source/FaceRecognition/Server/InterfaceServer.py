@@ -24,7 +24,7 @@ class InterfaceServer(multiprocessing.Process):
         for res in responses:
             self.__responses.put(res)
 
-    def dequeue_requests(self, amount: int = -1) -> Iterable:
+    def dequeue_requests(self, amount: int = -1) -> list:
         requests = []
         if amount == -1:
             amount = self.__requests.qsize()
@@ -45,8 +45,8 @@ class InterfaceServer(multiprocessing.Process):
             asyncio.ensure_future(self.__responses_handler())
             asyncio.ensure_future(self.__start_requests_server())
             self.__loop.run_forever()
-        except Exception as e:
-            print(e)
+        except Exception as err:
+            print(f"Fatal or uncaught server error: {err}")
         finally:
             self.__loop.close()
 
@@ -62,7 +62,8 @@ class InterfaceServer(multiprocessing.Process):
         while not self.__stop:
             try:
                 data = await current_conn.read_data()
-            except ConnectionError:
+            except ConnectionError as err:
+                print(f"{current_conn.connection_id} encountered error {err}")
                 break
             if not data:
                 break
@@ -71,8 +72,8 @@ class InterfaceServer(multiprocessing.Process):
         print("Ending processing requests...")
 
     async def __responses_handler(self):
+        print("Processing responses...")
         while not self.__stop:
-            print("Processing responses...")
             response = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
             current_conn, message = response.connection_id, response.recognition_result
             if isinstance(message, str):
@@ -80,8 +81,8 @@ class InterfaceServer(multiprocessing.Process):
             try:
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
                 print(f"Sent: {message}")
-            except ConnectionError:
-                pass
+            except ConnectionError as err:
+                print(f"Connection with id {current_conn} encountered error {err}")
         print("Ending processing responses...")
 
     def kill(self):

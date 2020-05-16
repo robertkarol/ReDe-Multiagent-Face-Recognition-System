@@ -1,5 +1,4 @@
 from Agents.RecognitionAgent import RecognitionAgent
-from Domain.DTO import RecognitionRequestDTO
 from Domain.RecognitionRequest import RecognitionRequest
 from Domain.RecognitionResponse import RecognitionResponse, RecognitionOutcome
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
@@ -36,10 +35,10 @@ class ControlAgent(Agent):
 
         def __wrap_results(self, results):
             for result in results:
-                result.recognition_result = self.__get_response(result)
+                result.recognition_result = self.__build_response(result)
             return results
 
-        def __get_response(self, result):
+        def __build_response(self, result):
             generate_outcome, recognized_class, proba = result.generate_outcome, result.recognition_result[0], \
                                         result.recognition_result[1]
             if generate_outcome:
@@ -71,12 +70,14 @@ class ControlAgent(Agent):
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
-                    recognition_request: RecognitionRequest = \
-                        RecognitionRequest.deserialize(request.recognition_request)
+                    self.__build_request(request)
                     await self.__outer_ref.blackboard.publish_recognition_request(
-                        recognition_request.detection_location,
-                        RecognitionRequestDTO(request.connection_id, recognition_request))
+                        request.recognition_request.detection_location, request)
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
+
+        def __build_request(self, request):
+            request.recognition_request: RecognitionRequest = \
+                RecognitionRequest.deserialize(request.recognition_request)
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
@@ -90,8 +91,8 @@ class ControlAgent(Agent):
             print(f"{self.__outer_ref.jid} starting managing load. . .")
 
         async def run(self):
-            load_info = self.__outer_ref.blackboard.get_load_information()
             print(f"{self.__outer_ref.jid} checking load. . .")
+            load_info = self.__outer_ref.blackboard.get_load_information()
             for location in load_info:
                 if location == 'results':
                     continue
@@ -110,15 +111,15 @@ class ControlAgent(Agent):
 
             while load_factor > no_of_agents:
                 new_agent = RecognitionAgent.get_agent_clone(agents[0])
-                self.__outer_ref.recognition_locations_manager.add_recognition_agent(new_agent.location_to_serve,
-                                                                                     new_agent)
+                self.__outer_ref.recognition_locations_manager.add_recognition_agent(
+                        new_agent.location_to_serve, new_agent)
                 await new_agent.start()
                 no_of_agents += 1
 
             while no_of_agents > load_factor:
                 victim_agent = agents[-1]
-                self.__outer_ref.recognition_locations_manager.remove_recognition_agent(victim_agent.location_to_serve,
-                                                                                        victim_agent)
+                self.__outer_ref.recognition_locations_manager.remove_recognition_agent(
+                        victim_agent.location_to_serve, victim_agent)
                 await victim_agent.stop()
                 no_of_agents -= 1
 

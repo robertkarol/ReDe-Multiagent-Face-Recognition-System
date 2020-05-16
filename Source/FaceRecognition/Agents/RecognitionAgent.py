@@ -24,42 +24,40 @@ class RecognitionAgent(Agent):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref: RecognitionAgent = outer_ref
-            self.__model = None
 
         async def on_start(self):
             try:
-                self.__model = await self.__outer_ref.load_model()
-            except Exception as e:
-                print(e)
+                self.__outer_ref.model = await self.__outer_ref.load_model()
+            except Exception as err:
+                print(f"Fatal exception loading model: {err}")
                 self.kill()
             print(f"{self.__outer_ref.jid} starting the monitoring . . .")
 
         async def run(self):
             print(f"{self.__outer_ref.jid} polling. . .")
-            data = await self.__outer_ref.blackboard.get_recognition_requests(self.__outer_ref.location_to_serve,
-                                                                              self.__outer_ref.processing_batch_size)
+            data = await self.__outer_ref.blackboard.get_recognition_requests(
+                self.__outer_ref.location_to_serve, self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
                 return
             print(f"{self.__outer_ref.jid} starting resolving. . .")
             requesting_agents, faces = self.__unwrap_requests(data)
             try:
-                results = \
-                    await self.__outer_ref.loop.run_in_executor(None,
-                                                                lambda: self.__model.predict_from_faces_images(faces))
+                results = await self.__outer_ref.loop.run_in_executor(
+                    None, lambda: self.__outer_ref.model.predict_from_faces_images(faces))
                 await self.__outer_ref.blackboard.publish_recognition_results(
                     self.__wrap_results(requesting_agents, results))
-            except Exception as e:
-                print(e)
+            except Exception as err:
+                print(f"Exception encountered on model prediction: {err}")
             print(f"{self.__outer_ref.jid} done resolving . . .")
 
         async def on_end(self):
             print(f"{self.__outer_ref.jid} ending the monitoring . . .")
 
-        def __unwrap_requests(self, raw_data):
+        def __unwrap_requests(self, requests):
             agents = []
             faces = []
-            for request in raw_data:
+            for request in requests:
                 conn, request = request.connection_id, request.recognition_request
                 agents.append((conn, request.generate_outcome))
                 serialized_image = request.face_image
@@ -99,7 +97,7 @@ class RecognitionAgent(Agent):
 
         async def __process_message(self, message: Message):
             if message.metadata['type'] == 'new_model_available':
-                self.__model = await self.__outer_ref.load_model()
+                self.__outer_ref.model = await self.__outer_ref.load_model()
 
     # TODO: make fields protected for all agents
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str,
@@ -119,6 +117,7 @@ class RecognitionAgent(Agent):
         self.polling_interval = polling_interval
         self.message_checking_interval = message_checking_interval
         self.__model_manager = ModelManager.get_manager(self.model_directory)
+        self.model = None
         super().__init__(jid, password, verify_security)
 
     async def setup(self):
