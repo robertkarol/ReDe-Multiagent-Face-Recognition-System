@@ -99,33 +99,64 @@ class RecognitionAgent(Agent):
             if message.metadata['type'] == 'new_model_available':
                 self.__outer_ref.model = await self.__outer_ref.load_model()
 
-    # TODO: make fields protected for all agents
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str,
                  model_directory: str, model_basename: str, executor: ThreadPoolExecutor,
                  processing_batch_size: int = 5, polling_interval: float = 1,
                  message_checking_interval: int = 5, verify_security: bool = False):
-        self.jid = jid
-        self.password = password
-        self.blackboard = blackboard
-        self.location_to_serve = location_to_serve
-        self.model_directory = model_directory
-        self.model_basename = model_basename
-        self.loop = asyncio.get_event_loop()
-        if executor:
-            self.loop.set_default_executor(executor)
-        self.processing_batch_size = processing_batch_size
-        self.polling_interval = polling_interval
-        self.message_checking_interval = message_checking_interval
-        self.__model_manager = ModelManager.get_manager(self.model_directory)
-        self.model = None
         super().__init__(jid, password, verify_security)
+        self.loop.set_default_executor(executor)
+        self.__blackboard = blackboard
+        self.__location_to_serve = location_to_serve
+        self.__model_directory = model_directory
+        self.__model_basename = model_basename
+        self.__processing_batch_size = processing_batch_size
+        self.__polling_interval = polling_interval
+        self.__message_checking_interval = message_checking_interval
+        self.__model_manager = ModelManager.get_manager(self.model_directory)
+        self.__model = None
+
+    @property
+    def blackboard(self):
+        return self.__blackboard
+
+    @property
+    def location_to_serve(self):
+        return self.__location_to_serve
+
+    @property
+    def model_directory(self):
+        return self.__model_directory
+
+    @property
+    def model_basename(self):
+        return self.__model_basename
+
+    @property
+    def processing_batch_size(self):
+        return self.__processing_batch_size
+
+    @property
+    def polling_interval(self):
+        return self.__polling_interval
+
+    @property
+    def message_checking_interval(self):
+        return self.__message_checking_interval
+
+    @property
+    def model(self):
+        return self.__model
+
+    @model.setter
+    def model(self, value):
+        self.__model = value
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
-        rec_behav = self.MonitoringRecognitionRequestsBehavior(self)
-        msg_behav = self.MessageReceiverBehavior(self)
-        self.add_behaviour(rec_behav)
-        self.add_behaviour(msg_behav)
+        rec_behavior = self.MonitoringRecognitionRequestsBehavior(self)
+        msg_behavior = self.MessageReceiverBehavior(self)
+        self.add_behaviour(rec_behavior)
+        self.add_behaviour(msg_behavior)
 
     async def load_model(self):
         print(f"{self.jid} loading model {self.model_basename} . . .")

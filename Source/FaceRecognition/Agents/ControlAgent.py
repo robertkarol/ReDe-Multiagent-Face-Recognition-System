@@ -132,26 +132,59 @@ class ControlAgent(Agent):
                  executor: ThreadPoolExecutor, recognition_locations_manager, processing_batch_size: int = 10,
                  polling_interval: float = 1, recognized_threshold: float = 0.85, unrecognized_threshold: float = 0.65,
                  max_load_per_agent: int = 100, load_check_period: int = 5, verify_security: bool = False):
-        self.jid = jid
-        self.blackboard = blackboard
-        self.password = password
-        self.interface_server = interface_server
-        self.loop = asyncio.get_event_loop()
-        self.loop.set_default_executor(executor)
-        self.recognition_locations_manager: RecognitionLocationsManager = recognition_locations_manager
-        self.processing_batch_size = processing_batch_size
-        self.polling_interval = polling_interval
-        self.recognized_threshold = recognized_threshold
-        self.unrecognized_threshold = unrecognized_threshold
-        self.max_load_per_agent = max_load_per_agent
-        self.load_check_period = load_check_period
         super().__init__(jid, password, verify_security)
+        self.loop.set_default_executor(executor)
+        self.__blackboard = blackboard
+        self.__interface_server = interface_server
+        self.__recognition_locations_manager: RecognitionLocationsManager = recognition_locations_manager
+        self.__processing_batch_size = processing_batch_size
+        self.__polling_interval = polling_interval
+        self.__recognized_threshold = recognized_threshold
+        self.__unrecognized_threshold = unrecognized_threshold
+        self.__max_load_per_agent = max_load_per_agent
+        self.__load_check_period = load_check_period
+
+    @property
+    def blackboard(self):
+        return self.__blackboard
+
+    @property
+    def interface_server(self):
+        return self.__interface_server
+
+    @property
+    def recognition_locations_manager(self):
+        return self.__recognition_locations_manager
+
+    @property
+    def processing_batch_size(self):
+        return self.__processing_batch_size
+
+    @property
+    def polling_interval(self):
+        return self.__polling_interval
+
+    @property
+    def recognized_threshold(self):
+        return self.__recognized_threshold
+
+    @property
+    def unrecognized_threshold(self):
+        return self.__unrecognized_threshold
+
+    @property
+    def max_load_per_agent(self):
+        return self.__max_load_per_agent
+
+    @property
+    def load_check_period(self):
+        return self.__load_check_period
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
-        res_beh = self.RecognitionResultsMonitoringBehavior(self)
-        req_beh = self.RecognitionRequestsMonitoringBehavior(self)
-        load_beh = self.LoadManagementBehavior(self, self.load_check_period)
-        self.add_behaviour(res_beh)
-        self.add_behaviour(req_beh)
-        self.add_behaviour(load_beh)
+        res_behavior = self.RecognitionResultsMonitoringBehavior(self)
+        req_behavior = self.RecognitionRequestsMonitoringBehavior(self)
+        load_behavior = self.LoadManagementBehavior(self, self.load_check_period)
+        self.add_behaviour(res_behavior)
+        self.add_behaviour(req_behavior)
+        self.add_behaviour(load_behavior)

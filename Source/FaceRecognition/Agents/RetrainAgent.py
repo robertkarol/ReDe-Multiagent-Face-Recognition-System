@@ -60,17 +60,30 @@ class RetrainAgent(Agent):
     def __init__(self, jid: str, password: str, data_directory: str,
                  recognition_locations_manager: RecognitionLocationsManager, executor: ThreadPoolExecutor,
                  period: int = 120, verify_security: bool = False):
-        self.jid = jid
-        self.password = password
-        self.data_directory = data_directory
-        self.recognition_locations_manager = recognition_locations_manager
-        self.loop = asyncio.get_event_loop()
-        self.loop.set_default_executor(executor)
-        self.period = period
-        self.new_identities_manager: NewIdentitiesManager = NewIdentitiesManager.get_manager(data_directory)
         super().__init__(jid, password, verify_security)
+        self.loop.set_default_executor(executor)
+        self.__data_directory = data_directory
+        self.__recognition_locations_manager = recognition_locations_manager
+        self.__period = period
+        self.__new_identities_manager: NewIdentitiesManager = NewIdentitiesManager.get_manager(data_directory)
+
+    @property
+    def data_directory(self):
+        return self.__data_directory
+
+    @property
+    def period(self):
+        return self.__period
+
+    @property
+    def recognition_locations_manager(self):
+        return self.__recognition_locations_manager
+
+    @property
+    def new_identities_manager(self):
+        return self.__new_identities_manager
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
-        retrain_behav = self.ModelRetrainBehavior(self, self.period)
-        self.add_behaviour(retrain_behav)
+        retrain_behavior = self.ModelRetrainBehavior(self, self.period)
+        self.add_behaviour(retrain_behavior)
