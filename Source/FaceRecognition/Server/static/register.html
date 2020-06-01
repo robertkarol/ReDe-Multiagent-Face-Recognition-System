@@ -8,7 +8,12 @@
 <h1> Register new identity in the system</h1>
 <div id="drop-area">
     <form class="my-form" onsubmit="" id="register-form">
-        Name: <input type="text" id="name">
+        Name: <input type="text" id="name"><br><br>
+        Location: <select name="option" id="location">
+        {% for o in option_list %}
+            <option>{{o}}</option>
+        {% endfor %}
+        </select>
         <br><br>
         <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
         <input type="file" id="file-elem" multiple accept="image/*" onchange="handleFiles(this.files)">

@@ -61,6 +61,9 @@ class NewIdentitiesManager(SingletonPerKey):
         finally:
             self.__lock.release()
 
+    def get_recognition_locations(self):
+        return self.__source_locations_manager.get_recognition_locations()
+
     def __save_images(self, images, directory):
         for i, image in enumerate(images):
             image.save(path.join(directory, self.__face_image_filename.format(i)), 'JPEG')

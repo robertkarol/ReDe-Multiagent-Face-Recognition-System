@@ -16,4 +16,4 @@ def register_identities(location, name):
 
 @app.route('/register', methods=['GET'])
 def register_page():
-    return render_template('register.html')
+    return render_template('register.html', option_list=manager.get_recognition_locations())

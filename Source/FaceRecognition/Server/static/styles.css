@@ -8,7 +8,7 @@
 }
 
 #drop-area.highlight {
-    border-color: purple;
+    border-color: #202480;
 }
 
 p {
@@ -48,5 +48,5 @@ p {
 }
 
 #errors-log {
-
+    margin: auto;
 }

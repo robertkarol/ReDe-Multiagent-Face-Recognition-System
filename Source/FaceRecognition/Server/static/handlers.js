@@ -54,23 +54,23 @@ function handleFiles(files) {
 function uploadFiles() {
     files = allFiles
     let name = $('#name').val().toLowerCase().replace(" ", "_")
-    var url = 'http://127.0.0.1:5000/register/' + name
+    let location = $('#location').val()
+    var url = 'http://127.0.0.1:5000/register/' + location + '/' + name
     var formData = new FormData()
-    files.forEach(file => {
-        formData.append('file', file)
+    files.forEach((file, index) => {
+        formData.append('file' + index, file)
     })
     fetch(url, {
         method: 'POST',
         body: formData
+    }).then(() => {
+        clearErrors()
+        alert("Upload successful")
     })
-        .then(() => {
-            clearErrors()
-            alert("Upload successful")
-        })
-        .catch(() => {
-            clearErrors()
-            logError("Error registering")
-        })
+    .catch(() => {
+        clearErrors()
+        logError("Error registering")
+    })
 }
 
 function logError(error) {
