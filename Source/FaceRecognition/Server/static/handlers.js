@@ -33,6 +33,12 @@ function unhighlight(e) {
     dropArea.removeClass('highlight')
 }
 
+function handleRemoveImage(element) {
+    let id = $(element).parent().attr('id').match(/\d/g).join("")
+    allFiles.splice(id, 1)
+    $(element).parent().remove()
+}
+
 function handleViewErrors(e) {
     let element = e.target
     element.classList.toggle("active")
@@ -115,11 +121,22 @@ function handleFiles(files) {
 
 function previewFile(file) {
     let reader = new FileReader()
+    previewFile.index = previewFile.index || 0
     reader.readAsDataURL(file)
     reader.onloadend = function () {
+        $('<div>', {
+            class: 'gallery-image-container',
+            id: 'container-' + previewFile.index
+        }).appendTo('#gallery')
         $('<img>', {
             src: reader.result,
             class: 'gallery-image'
-        }).appendTo('#gallery');
+        }).appendTo('#container-' + previewFile.index)
+        $('<button>', {
+            class: 'remove-image',
+            text: 'X',
+            onclick: 'handleRemoveImage(this)'
+        }).appendTo('#container-' + previewFile.index)
+        previewFile.index++
     }
 }
