@@ -1,0 +1,28 @@
+<head>
+    <title>Register Identity</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='handlers.js') }}"></script>
+</head>
+<body>
+<h1> Register new identity in the system</h1>
+<div id="drop-area">
+    <form class="my-form" onsubmit="" id="register-form">
+        Name: <input type="text" id="name"><br><br>
+        Location: <select name="option" id="location">
+        {% for o in option_list %}
+            <option>{{o}}</option>
+        {% endfor %}
+        </select>
+        <br><br>
+        <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
+        <input type="file" id="file-elem" multiple accept="image/*" onchange="handleFiles(this.files)">
+        <label class="button" for="file-elem">Select some files</label>
+        <br><br>
+        <input class="button" type="submit">
+    </form>
+    <div id="gallery"></div>
+</div>
+<button class="collapsible" id="view-errors">View errors</button>
+<div class="content" id="errors-log"></div>
+</body>
