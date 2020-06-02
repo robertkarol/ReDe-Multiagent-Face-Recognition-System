@@ -2,20 +2,22 @@ let allFiles = []
 let dropArea
 
 $(document).ready(function () {
-    dropArea = document.getElementById('drop-area')
-    form = document.getElementById('register-form')
+    dropArea = $('#drop-area')
+    form = $('#register-form')
+    viewErrors = $('#view-errors')
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false)
+        dropArea.on(eventName, preventDefaults)
     })
     ;['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, highlight, false)
+        dropArea.on(eventName, highlight)
     })
 
     ;['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, unhighlight, false)
+        dropArea.on(eventName, unhighlight)
     })
-    dropArea.addEventListener('drop', handleDrop, false)
-    form.addEventListener('submit', handleSubmit);
+    dropArea.on('drop', handleDrop)
+    form.on('submit', handleSubmit)
+    viewErrors.on('click', handleViewErrors)
 });
 
 function preventDefaults(e) {
@@ -24,11 +26,22 @@ function preventDefaults(e) {
 }
 
 function highlight(e) {
-    dropArea.classList.add('highlight')
+    dropArea.addClass('highlight')
 }
 
 function unhighlight(e) {
-    dropArea.classList.remove('highlight')
+    dropArea.removeClass('highlight')
+}
+
+function handleViewErrors(e) {
+    let element = e.target
+    element.classList.toggle("active")
+    let content = element.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
 }
 
 function handleSubmit(e) {
@@ -36,12 +49,14 @@ function handleSubmit(e) {
     clearErrors()
     if (validateForm()) {
         uploadFiles()
+        allFiles = []
+        $('#gallery').empty()
     }
 }
 
 function handleDrop(e) {
-    let dt = e.dataTransfer
-    let files = dt.files
+    let dataTransfer = e.originalEvent.dataTransfer
+    let files = dataTransfer.files
     handleFiles(files)
 }
 
@@ -55,8 +70,8 @@ function uploadFiles() {
     files = allFiles
     let name = $('#name').val().toLowerCase().replace(" ", "_")
     let location = $('#location').val()
-    var url = 'http://127.0.0.1:5000/register/' + location + '/' + name
-    var formData = new FormData()
+    let url = 'http://127.0.0.1:5000/register/' + location + '/' + name
+    let formData = new FormData()
     files.forEach((file, index) => {
         formData.append('file' + index, file)
     })
@@ -67,19 +82,22 @@ function uploadFiles() {
         clearErrors()
         alert("Upload successful")
     })
-    .catch(() => {
+    .catch(err => {
         clearErrors()
-        logError("Error registering")
+        logError("Error registering: " + err)
     })
 }
 
 function logError(error) {
+    $('#view-errors').css('visibility', 'visible')
     $('<p>', {
         text: error,
+        class: 'error-message'
     }).appendTo('#errors-log');
 }
 
 function clearErrors() {
+    $('#view-errors').css('visibility', 'hidden')
     $('#errors-log').empty()
 }
 
