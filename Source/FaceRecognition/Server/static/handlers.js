@@ -37,10 +37,10 @@ function handleViewErrors(e) {
     let element = e.target
     element.classList.toggle("active")
     let content = element.nextElementSibling;
-    if (content.style.maxHeight){
-      content.style.maxHeight = null;
+    if (content.style.maxHeight) {
+        content.style.maxHeight = null;
     } else {
-      content.style.maxHeight = content.scrollHeight + "px";
+        content.style.maxHeight = content.scrollHeight + "px";
     }
 }
 
@@ -49,56 +49,15 @@ function handleSubmit(e) {
     clearErrors()
     if (validateForm()) {
         uploadFiles()
-        allFiles = []
-        $('#gallery').empty()
+            .then(() => {
+                alert("Upload successful")
+                allFiles = []
+                $('#gallery').empty()
+            })
+            .catch(error => {
+                logError("Error registering: " + error)
+            })
     }
-}
-
-function handleDrop(e) {
-    let dataTransfer = e.originalEvent.dataTransfer
-    let files = dataTransfer.files
-    handleFiles(files)
-}
-
-function handleFiles(files) {
-    files = [...files]
-    allFiles.push(...files)
-    files.forEach(previewFile)
-}
-
-function uploadFiles() {
-    files = allFiles
-    let name = $('#name').val().toLowerCase().replace(" ", "_")
-    let location = $('#location').val()
-    let url = 'http://127.0.0.1:5000/register/' + location + '/' + name
-    let formData = new FormData()
-    files.forEach((file, index) => {
-        formData.append('file' + index, file)
-    })
-    fetch(url, {
-        method: 'POST',
-        body: formData
-    }).then(() => {
-        clearErrors()
-        alert("Upload successful")
-    })
-    .catch(err => {
-        clearErrors()
-        logError("Error registering: " + err)
-    })
-}
-
-function logError(error) {
-    $('#view-errors').css('visibility', 'visible')
-    $('<p>', {
-        text: error,
-        class: 'error-message'
-    }).appendTo('#errors-log');
-}
-
-function clearErrors() {
-    $('#view-errors').css('visibility', 'hidden')
-    $('#errors-log').empty()
 }
 
 function validateForm() {
@@ -114,12 +73,53 @@ function validateForm() {
     return valid
 }
 
+function logError(error) {
+    $('#view-errors').css('visibility', 'visible')
+    $('<p>', {
+        text: error,
+        class: 'error-message'
+    }).appendTo('#errors-log');
+}
+
+function clearErrors() {
+    $('#view-errors').css('visibility', 'hidden')
+    $('#errors-log').empty()
+}
+
+function uploadFiles() {
+    files = allFiles
+    let name = $('#name').val().toLowerCase().replace(" ", "_")
+    let location = $('#location').val()
+    let url = 'http://127.0.0.1:5000/register/' + location + '/' + name
+    let formData = new FormData()
+    files.forEach((file, index) => {
+        formData.append('file' + index, file)
+    })
+    return fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+}
+
+function handleDrop(e) {
+    let dataTransfer = e.originalEvent.dataTransfer
+    let files = dataTransfer.files
+    handleFiles(files)
+}
+
+function handleFiles(files) {
+    files = [...files]
+    allFiles.push(...files)
+    files.forEach(previewFile)
+}
+
 function previewFile(file) {
     let reader = new FileReader()
     reader.readAsDataURL(file)
     reader.onloadend = function () {
         $('<img>', {
             src: reader.result,
+            class: 'gallery-image'
         }).appendTo('#gallery');
     }
 }

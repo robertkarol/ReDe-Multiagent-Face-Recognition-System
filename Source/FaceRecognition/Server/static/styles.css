@@ -81,3 +81,8 @@ p {
 #view-errors {
     visibility: hidden;
 }
+
+.gallery-image {
+    max-width: 100px;
+    max-height: 100px;
+}
