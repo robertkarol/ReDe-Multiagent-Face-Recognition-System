@@ -1,111 +1,111 @@
 #drop-area {
-    border: 2px dashed #ccc;
-    border-radius: 20px;
-    width: 70%;
-    font-family: sans-serif;
-    margin: 100px auto;
-    padding: 20px;
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  width: 70%;
+  font-family: sans-serif;
+  margin: 100px auto;
+  padding: 20px;
 }
 
 #drop-area.highlight {
-    border-color: #202480;
+  border-color: #202480;
 }
 
 p {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 .my-form {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 #gallery {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 #gallery img {
-    width: 150px;
-    margin-bottom: 10px;
-    margin-right: 10px;
-    vertical-align: middle;
+  width: 150px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
 .button {
-    display: inline-block;
-    padding: 10px;
-    background: #ccc;
-    cursor: pointer;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+  display: inline-block;
+  padding: 10px;
+  background: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
 .button:hover {
-    background: #ddd;
+  background: #ddd;
 }
 
 #file-elem {
-    display: none;
+  display: none;
 }
 
 .error-message {
-    color: darkred;
-    padding-top: 5px;
-    margin: auto;
+  color: darkred;
+  padding-top: 5px;
+  margin: auto;
 }
 
 .collapsible {
-    background-color: #777;
-    color: white;
-    cursor: pointer;
-    padding: 18px;
-    width: 100%;
-    border: none;
-    text-align: left;
-    outline: none;
-    font-size: 15px;
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
 }
 
 .active, .collapsible:hover {
-    background-color: #555;
+  background-color: #555;
 }
 
 .content {
-    padding: 0 18px;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.2s ease-out;
-    background-color: #f1f1f1;
+  padding: 0 18px;
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  background-color: #f1f1f1;
 }
 
 #view-errors {
-    visibility: hidden;
+  visibility: hidden;
 }
 
 .gallery-image {
-    max-width: 100px;
-    max-height: 100px;
+  max-width: 100px;
+  max-height: 100px;
 }
 
 #gallery {
-    display: flex;
-    flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .remove-image {
-    position: relative;
-    top: -30%;
-    left: -30%;
-    background-color: #555;
-    color: white;
-    font-size: 14px;
-    padding: 3px 6px;
-    border: none;
-    cursor: pointer;
-    border-radius: 20px;
-    text-align: center;
+  position: relative;
+  top: -30%;
+  left: -30%;
+  background-color: #555;
+  color: white;
+  font-size: 14px;
+  padding: 3px 6px;
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+  text-align: center;
 }
 
 .remove-image:hover {
-    background-color: black;
+  background-color: black;
 }
