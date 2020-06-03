@@ -83,7 +83,7 @@ function handleSubmit(event) {
             })
             .catch((error) => {
                 logError("Error registering: " + error);
-            })
+            });
     }
 }
 
@@ -106,7 +106,7 @@ function previewFile(file) {
             onclick: "handleRemoveImage(this)"
         }).appendTo("#container-" + previewFile.index);
         previewFile.index++;
-    }
+    };
 }
 
 function handleFiles(files) {
@@ -123,8 +123,6 @@ function handleDrop(event) {
 
 $(document).ready(function () {
     dropArea = $("#drop-area");
-    form = $("#register-form");
-    viewErrors = $("#view-errors");
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
         dropArea.on(eventName, preventDefaults);
     });
@@ -135,6 +133,6 @@ $(document).ready(function () {
         dropArea.on(eventName, unhighlight);
     });
     dropArea.on("drop", handleDrop);
-    form.on("submit", handleSubmit);
-    viewErrors.on("click", handleViewErrors);
+    $("#register-form").on("submit", handleSubmit);
+    $("#view-errors").on("click", handleViewErrors);
 });

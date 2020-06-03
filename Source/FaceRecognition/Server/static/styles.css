@@ -19,10 +19,6 @@ p {
   margin-bottom: 10px;
 }
 
-#gallery {
-  margin-top: 10px;
-}
-
 #gallery img {
   width: 150px;
   margin-bottom: 10px;
@@ -65,7 +61,8 @@ p {
   font-size: 15px;
 }
 
-.active, .collapsible:hover {
+.active,
+.collapsible:hover {
   background-color: #555;
 }
 
@@ -88,6 +85,7 @@ p {
 }
 
 #gallery {
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
 }

@@ -3,7 +3,7 @@ from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Utils.Singleton import SingletonPerKey
 from multiprocessing import Lock
 from os import path, mkdir, listdir
-from typing import Iterable, Tuple
+from typing import Iterable
 
 
 class NewIdentitiesManager(SingletonPerKey):

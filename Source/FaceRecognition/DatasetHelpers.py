@@ -15,7 +15,7 @@ class DatasetHelpers:
         no_of_faces_to_extract = 1 if single_face else len(results)
         face_array_list = []
         for i in range(no_of_faces_to_extract):
-            x1, y1, width, height = results[0]['box']
+            x1, y1, width, height = results[i]['box']
             x1, y1 = abs(x1), abs(y1)
             x2, y2 = x1 + width, y1 + height
             face = image_as_pixels[y1:y2, x1:x2]
