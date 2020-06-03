@@ -1,39 +1,21 @@
 let allFiles = [];
 let dropArea;
 
-$(document).ready(function () {
-    dropArea = $('#drop-area');
-    form = $('#register-form');
-    viewErrors = $('#view-errors');
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
-        dropArea.on(eventName, preventDefaults);
-    });
-    ['dragenter', 'dragover'].forEach((eventName) => {
-        dropArea.on(eventName, highlight);
-    });
-    ['dragleave', 'drop'].forEach((eventName) => {
-        dropArea.on(eventName, unhighlight);
-    });
-    dropArea.on('drop', handleDrop);
-    form.on('submit', handleSubmit);
-    viewErrors.on('click', handleViewErrors);
-});
-
 function preventDefaults(event) {
     event.preventDefault();
     event.stopPropagation();
 }
 
 function highlight(event) {
-    dropArea.addClass('highlight');
+    dropArea.addClass("highlight");
 }
 
 function unhighlight(event) {
-    dropArea.removeClass('highlight');
+    dropArea.removeClass("highlight");
 }
 
 function handleRemoveImage(element) {
-    let id = $(element).parent().attr('id').match(/\d/g).join("");
+    let id = $(element).parent().attr("id").match(/\d/g).join("");
     allFiles.splice(id, 1);
     $(element).parent().remove();
 }
@@ -49,20 +31,17 @@ function handleViewErrors(event) {
     }
 }
 
-function handleSubmit(event) {
-    event.preventDefault();
-    clearErrors();
-    if (validateForm()) {
-        uploadFiles()
-            .then(() => {
-                alert("Upload successful");
-                allFiles = [];
-                $('#gallery').empty();
-            })
-            .catch(error => {
-                logError("Error registering: " + error);
-            })
-    }
+function clearErrors() {
+    $("#view-errors").css("visibility", "hidden");
+    $("#errors-log").empty();
+}
+
+function logError(error) {
+    $("#view-errors").css("visibility", "visible");
+    $("<p>", {
+        text: error,
+        class: "error-message"
+    }).appendTo("#errors-log");
 }
 
 function validateForm() {
@@ -71,45 +50,63 @@ function validateForm() {
         logError("You should provide at least 8 face images!");
         valid = false;
     }
-    if (!$('#name').val()) {
+    if (!$("#name").val()) {
         logError("Name field must be filled!");
         valid = false;
     }
     return valid;
 }
 
-function logError(error) {
-    $('#view-errors').css('visibility', 'visible');
-    $('<p>', {
-        text: error,
-        class: 'error-message'
-    }).appendTo('#errors-log');
-}
-
-function clearErrors() {
-    $('#view-errors').css('visibility', 'hidden');
-    $('#errors-log').empty();
-}
-
 function uploadFiles() {
-    files = allFiles;
-    let name = $('#name').val().toLowerCase().replace(" ", "_");
-    let location = $('#location').val();
-    let url = 'http://127.0.0.1:5000/register/' + location + '/' + name;
+    let name = $("#name").val().toLowerCase().replace(" ", "_");
+    let location = $("#location").val();
+    let url = "http://127.0.0.1:5000/register/" + location + "/" + name;
     let formData = new FormData();
-    files.forEach((file, index) => {
-        formData.append('file' + index, file)
+    allFiles.forEach((file, index) => {
+        formData.append("file" + index, file);
     });
     return fetch(url, {
-        method: 'POST',
+        method: "POST",
         body: formData
     });
 }
 
-function handleDrop(event) {
-    let dataTransfer = event.originalEvent.dataTransfer;
-    let files = dataTransfer.files;
-    handleFiles(files);
+function handleSubmit(event) {
+    event.preventDefault();
+    clearErrors();
+    if (validateForm()) {
+        uploadFiles()
+            .then(() => {
+                alert("Upload successful");
+                allFiles = [];
+                $("#gallery").empty();
+            })
+            .catch((error) => {
+                logError("Error registering: " + error);
+            })
+    }
+}
+
+function previewFile(file) {
+    let reader = new FileReader();
+    previewFile.index = previewFile.index || 0;
+    reader.readAsDataURL(file);
+    reader.onloadend = function () {
+        $("<div>", {
+            class: "gallery-image-container",
+            id: "container-" + previewFile.index
+        }).appendTo("#gallery");
+        $("<img>", {
+            src: reader.result,
+            class: "gallery-image"
+        }).appendTo("#container-" + previewFile.index);
+        $("<button>", {
+            class: "remove-image",
+            text: "X",
+            onclick: "handleRemoveImage(this)"
+        }).appendTo("#container-" + previewFile.index);
+        previewFile.index++;
+    }
 }
 
 function handleFiles(files) {
@@ -118,24 +115,26 @@ function handleFiles(files) {
     files.forEach(previewFile);
 }
 
-function previewFile(file) {
-    let reader = new FileReader();
-    previewFile.index = previewFile.index || 0;
-    reader.readAsDataURL(file);
-    reader.onloadend = function () {
-        $('<div>', {
-            class: 'gallery-image-container',
-            id: 'container-' + previewFile.index
-        }).appendTo('#gallery');
-        $('<img>', {
-            src: reader.result,
-            class: 'gallery-image'
-        }).appendTo('#container-' + previewFile.index);
-        $('<button>', {
-            class: 'remove-image',
-            text: 'X',
-            onclick: 'handleRemoveImage(this)'
-        }).appendTo('#container-' + previewFile.index);
-        previewFile.index++;
-    }
+function handleDrop(event) {
+    let dataTransfer = event.originalEvent.dataTransfer;
+    let files = dataTransfer.files;
+    handleFiles(files);
 }
+
+$(document).ready(function () {
+    dropArea = $("#drop-area");
+    form = $("#register-form");
+    viewErrors = $("#view-errors");
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropArea.on(eventName, preventDefaults);
+    });
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropArea.on(eventName, highlight);
+    });
+    ["dragleave", "drop"].forEach((eventName) => {
+        dropArea.on(eventName, unhighlight);
+    });
+    dropArea.on("drop", handleDrop);
+    form.on("submit", handleSubmit);
+    viewErrors.on("click", handleViewErrors);
+});
