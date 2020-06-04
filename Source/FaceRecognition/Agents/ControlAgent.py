@@ -5,6 +5,7 @@ from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.InterfaceServer import InterfaceServer
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from concurrent.futures.thread import ThreadPoolExecutor
+from json import JSONDecodeError
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour, PeriodicBehaviour
 import asyncio
@@ -70,7 +71,10 @@ class ControlAgent(Agent):
             else:
                 print(f"{self.__outer_ref.jid} starting resolving requests. . .")
                 for request in requests:
-                    self.__build_request(request)
+                    try:
+                        self.__build_request(request)
+                    except JSONDecodeError:
+                        continue
                     await self.__outer_ref.blackboard.publish_recognition_request(
                         request.recognition_request.detection_location, request)
                 print(f"{self.__outer_ref.jid} done resolving requests. . .")
@@ -99,6 +103,8 @@ class ControlAgent(Agent):
                 load_factor = load_info[location] // self.__outer_ref.max_load_per_agent + 1
                 agents = self.__outer_ref.recognition_locations_manager.get_recognition_agents(location)
                 agents_count = len(agents)
+                if agents_count > 0 and not agents[0].model:
+                    continue
                 running_agents_count = await self.__balance_number_of_agents(agents, load_factor)
                 if running_agents_count > agents_count:
                     print(f"Added {running_agents_count - agents_count} agents for {location}")
@@ -184,7 +190,10 @@ class ControlAgent(Agent):
         print(f"Agent {self.jid} starting . . .")
         res_behavior = self.RecognitionResultsMonitoringBehavior(self)
         req_behavior = self.RecognitionRequestsMonitoringBehavior(self)
-        load_behavior = self.LoadManagementBehavior(self, self.load_check_period)
         self.add_behaviour(res_behavior)
         self.add_behaviour(req_behavior)
-        self.add_behaviour(load_behavior)
+        if self.load_check_period > -1:
+            load_behavior = self.LoadManagementBehavior(self, self.load_check_period)
+            self.add_behaviour(load_behavior)
+        else:
+            print("Skipping load balancing . . .")

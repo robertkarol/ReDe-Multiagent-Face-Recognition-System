@@ -1,32 +1,36 @@
 from DatasetHelpers import DatasetHelpers
+from Domain.DTO import RecognitionRequestDTO
+from Domain.RecognitionRequest import RecognitionRequest
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Server.MockConnection import MockConnection
+from asyncinit import asyncinit
+import codecs
+import io
 
 
+@asyncinit
 class MockRecognitionBlackboard(RecognitionBlackboard):
-    def __init__(self):
-        super().__init__([1, 2, 3, 4, 5])
+    async def __init__(self, agent_locations):
+        super().__init__(agent_locations)
+        locations_count = len(agent_locations)
         images_to_predict = []
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/robi'))
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/mindy_kaling'))
         images_to_predict.extend(DatasetHelpers.load_images('locals/retrain/val/madonna'))
         # images_to_predict is 16; we make it 320 for each agent => 1600 total
-        agent1 = images_to_predict[:] * 20
-        agent2 = images_to_predict[:] * 20
-        agent3 = images_to_predict[:] * 20
-        agent4 = images_to_predict[:] * 20
-        agent5 = images_to_predict[:] * 20
-        self.__fake_add_agent_to_respond(agent1)
-        self.__fake_add_agent_to_respond(agent2)
-        self.__fake_add_agent_to_respond(agent3)
-        self.__fake_add_agent_to_respond(agent4)
-        self.__fake_add_agent_to_respond(agent5)
-        await super().publish_recognition_requests(1, agent1)
-        await super().publish_recognition_requests(2, agent2)
-        await super().publish_recognition_requests(3, agent3)
-        await super().publish_recognition_requests(4, agent4)
-        await super().publish_recognition_requests(5, agent5)
+        images_to_predict = images_to_predict * 20
+        agents = [images_to_predict[:]] * locations_count
+        for i, agent in enumerate(agents):
+            requests = self.__create_fake_request(agent, agent_locations[i])
+            await super().publish_recognition_requests(agent_locations[i], requests)
 
-    def __fake_add_agent_to_respond(self, agent_images):
+    def __create_fake_request(self, agent_images, location):
+        requests = []
         for i in range(len(agent_images)):
-            agent_images[i] = (MockConnection(), agent_images[i])
+            image = agent_images[i]
+            byte = io.BytesIO()
+            image.save(byte, 'JPEG')
+            request = RecognitionRequest("aa", location, codecs.encode(byte.getvalue(), 'base64').decode(), False,
+                                   base64encoded=True)
+            requests.append(RecognitionRequestDTO(MockConnection().fake_conn_id, request))
+        return requests

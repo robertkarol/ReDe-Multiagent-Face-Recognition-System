@@ -22,7 +22,7 @@ class Connection:
         if data_len == 0:
             data = None
         else:
-            data = await self.__reader_stream.read(data_len)
+            data = await self.__reader_stream.readexactly(data_len)
         return data
 
     async def write_data(self, data) -> None:

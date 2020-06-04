@@ -15,3 +15,5 @@ matplotlib
 mtcnn
 spade
 flask
+asyncinit
+syncasync
