@@ -1,6 +1,6 @@
 from Domain.DTO import RecognitionResultDTO
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from spade.agent import Agent
@@ -67,7 +67,10 @@ class RecognitionAgent(Agent):
                     serialized_image = bytes.fromhex(serialized_image)
                 serialized_image = io.BytesIO(serialized_image)
                 serialized_image.seek(0)
-                faces.append(Image.open(serialized_image))
+                try:
+                    faces.append(Image.open(serialized_image))
+                except UnidentifiedImageError as error:
+                    print(f"Error opening image: {error}")
             return agents, faces
 
         def __wrap_results(self, agents, raw_results):

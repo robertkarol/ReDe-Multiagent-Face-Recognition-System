@@ -73,7 +73,8 @@ class ControlAgent(Agent):
                 for request in requests:
                     try:
                         self.__build_request(request)
-                    except JSONDecodeError:
+                    except JSONDecodeError as error:
+                        print(f"Error decoding JSON: {error}")
                         continue
                     await self.__outer_ref.blackboard.publish_recognition_request(
                         request.recognition_request.detection_location, request)
