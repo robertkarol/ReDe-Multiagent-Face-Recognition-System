@@ -1,9 +1,9 @@
+from Agents.SystemAgent import SystemAgent
 from Domain.DTO import RecognitionResultDTO
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from PIL import Image, UnidentifiedImageError
 from Services.ModelManager import ModelManager
 from concurrent.futures.thread import ThreadPoolExecutor
-from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 import asyncio
@@ -11,8 +11,7 @@ import codecs
 import io
 
 
-class RecognitionAgent(Agent):
-
+class RecognitionAgent(SystemAgent):
     @staticmethod
     def get_agent_clone(agent):
         return RecognitionAgent(str(agent.jid), agent.password, agent.blackboard, agent.location_to_serve,
@@ -79,42 +78,17 @@ class RecognitionAgent(Agent):
                 results.append(RecognitionResultDTO(agents[i][0], agents[i][1], res))
             return results
 
-    class MessageReceiverBehavior(CyclicBehaviour):
-        def __init__(self, outer_ref):
-            super().__init__()
-            self.__outer_ref: RecognitionAgent = outer_ref
-
-        async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting the message receiver. . .")
-
-        async def run(self):
-            print(f"{self.__outer_ref.jid} checking for message. . .")
-            message = await self.receive(self.__outer_ref.message_checking_interval)
-            if message:
-                print(f"{self.__outer_ref.jid} processing message. . .")
-                await self.__process_message(message)
-                print(f"{self.__outer_ref.jid} done processing message. . .")
-
-        async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending the message receiver. . .")
-
-        async def __process_message(self, message: Message):
-            if message.metadata['type'] == 'new_model_available':
-                self.__outer_ref.model = await self.__outer_ref.load_model()
-
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, location_to_serve: str,
                  model_directory: str, model_basename: str, executor: ThreadPoolExecutor,
                  processing_batch_size: int = 5, polling_interval: float = 1,
                  message_checking_interval: int = 5, verify_security: bool = False):
-        super().__init__(jid, password, verify_security)
-        self.loop.set_default_executor(executor)
+        super().__init__(jid, password, executor, verify_security, message_checking_interval)
         self.__blackboard = blackboard
         self.__location_to_serve = location_to_serve
         self.__model_directory = model_directory
         self.__model_basename = model_basename
         self.__processing_batch_size = processing_batch_size
         self.__polling_interval = polling_interval
-        self.__message_checking_interval = message_checking_interval
         self.__model_manager = ModelManager.get_manager(self.model_directory)
         self.__model = None
 
@@ -143,10 +117,6 @@ class RecognitionAgent(Agent):
         return self.__polling_interval
 
     @property
-    def message_checking_interval(self):
-        return self.__message_checking_interval
-
-    @property
     def model(self):
         return self.__model
 
@@ -156,13 +126,17 @@ class RecognitionAgent(Agent):
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
+        await super().setup()
         rec_behavior = self.MonitoringRecognitionRequestsBehavior(self)
-        msg_behavior = self.MessageReceiverBehavior(self)
         self.add_behaviour(rec_behavior)
-        self.add_behaviour(msg_behavior)
 
     async def load_model(self):
         print(f"{self.jid} loading model {self.model_basename} . . .")
         model = await self.loop.run_in_executor(None, lambda: self.__model_manager.get_model(self.model_basename))
         print(f"{self.jid} done loading model {self.model_basename} . . .")
         return model
+
+    async def _process_message(self, message: Message):
+        await super()._process_message(message)
+        if message.metadata['type'] == 'new_model_available':
+            self.model = await self.load_model()

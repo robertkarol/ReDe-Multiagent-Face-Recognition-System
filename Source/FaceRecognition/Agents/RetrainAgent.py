@@ -1,14 +1,13 @@
+from Agents.SystemAgent import SystemAgent
 from Services.ModelManager import ModelManager
 from Services.NewIdentitiesManager import NewIdentitiesManager
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from concurrent.futures.thread import ThreadPoolExecutor
-from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour
 from spade.message import Message
-import asyncio
 
 
-class RetrainAgent(Agent):
+class RetrainAgent(SystemAgent):
     class ModelRetrainBehavior(PeriodicBehaviour):
         def __init__(self, outer_ref, period):
             super().__init__(period=period)
@@ -59,9 +58,8 @@ class RetrainAgent(Agent):
 
     def __init__(self, jid: str, password: str, data_directory: str,
                  recognition_locations_manager: RecognitionLocationsManager, executor: ThreadPoolExecutor,
-                 period: int = 120, verify_security: bool = False):
-        super().__init__(jid, password, verify_security)
-        self.loop.set_default_executor(executor)
+                 period: int = 120, message_checking_interval: int = 5, verify_security: bool = False):
+        super().__init__(jid, password, executor, verify_security, message_checking_interval)
         self.__data_directory = data_directory
         self.__recognition_locations_manager = recognition_locations_manager
         self.__period = period
@@ -85,5 +83,6 @@ class RetrainAgent(Agent):
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
+        await super().setup()
         retrain_behavior = self.ModelRetrainBehavior(self, self.period)
         self.add_behaviour(retrain_behavior)

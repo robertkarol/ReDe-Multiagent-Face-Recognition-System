@@ -66,6 +66,7 @@
       "unrecognized-threshold" : 0.85,
       "max-agent-load" : 100,
       "load-checking-interval" : 5,
+      "message-checking-interval" : -1,
       "polling-interval" : 1
     }
   ],
@@ -75,6 +76,7 @@
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
       "data-directory" : "./locals",
+      "message-checking-interval" : -1,
       "polling-interval" : 120
     }
   ],

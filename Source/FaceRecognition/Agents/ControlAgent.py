@@ -1,4 +1,5 @@
 from Agents.RecognitionAgent import RecognitionAgent
+from Agents.SystemAgent import SystemAgent
 from Domain.RecognitionRequest import RecognitionRequest
 from Domain.RecognitionResponse import RecognitionResponse, RecognitionOutcome
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
@@ -6,12 +7,11 @@ from Server.InterfaceServer import InterfaceServer
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from concurrent.futures.thread import ThreadPoolExecutor
 from json import JSONDecodeError
-from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour, PeriodicBehaviour
 import asyncio
 
 
-class ControlAgent(Agent):
+class ControlAgent(SystemAgent):
     class RecognitionResultsMonitoringBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
@@ -138,9 +138,9 @@ class ControlAgent(Agent):
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
                  executor: ThreadPoolExecutor, recognition_locations_manager, processing_batch_size: int = 10,
                  polling_interval: float = 1, recognized_threshold: float = 0.85, unrecognized_threshold: float = 0.65,
-                 max_load_per_agent: int = 100, load_check_period: int = 5, verify_security: bool = False):
-        super().__init__(jid, password, verify_security)
-        self.loop.set_default_executor(executor)
+                 max_load_per_agent: int = 100, load_check_period: int = 5, message_checking_interval: int = 5,
+                 verify_security: bool = False):
+        super().__init__(jid, password, executor, verify_security, message_checking_interval)
         self.__blackboard = blackboard
         self.__interface_server = interface_server
         self.__recognition_locations_manager: RecognitionLocationsManager = recognition_locations_manager
@@ -189,6 +189,7 @@ class ControlAgent(Agent):
 
     async def setup(self):
         print(f"Agent {self.jid} starting . . .")
+        await super().setup()
         res_behavior = self.RecognitionResultsMonitoringBehavior(self)
         req_behavior = self.RecognitionRequestsMonitoringBehavior(self)
         self.add_behaviour(res_behavior)
@@ -197,4 +198,4 @@ class ControlAgent(Agent):
             load_behavior = self.LoadManagementBehavior(self, self.load_check_period)
             self.add_behaviour(load_behavior)
         else:
-            print("Skipping load balancing . . .")
+            print(f"Agent {self.jid} skipping load balancing . . .")

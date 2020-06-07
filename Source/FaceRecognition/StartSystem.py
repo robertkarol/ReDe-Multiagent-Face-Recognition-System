@@ -77,7 +77,8 @@ if __name__ == "__main__":
                      agent['recognized-threshold'],
                      agent['unrecognized-threshold'],
                      agent['max-agent-load'],
-                     agent['load-checking-interval'])
+                     agent['load-checking-interval'],
+                     agent['message-checking-interval'])
         for agent in control_agents_config
     ]
 
@@ -87,7 +88,8 @@ if __name__ == "__main__":
                      agent['data-directory'],
                      recognition_locations_manager,
                      executor,
-                     agent['polling-interval'])
+                     agent['polling-interval'],
+                     agent['message-checking-interval'])
         for agent in retrain_agents_config
     ]
 
