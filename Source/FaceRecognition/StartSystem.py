@@ -3,10 +3,10 @@ from Agents.RecognitionAgent import RecognitionAgent
 from Agents.RetrainAgent import RetrainAgent
 from Persistance.MockRecognitionBlackboard import MockRecognitionBlackboard
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
-from ResourceLocalizer import ResourceLocalizer
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Server.InterfaceServer import InterfaceServer
 from Server.RegisterIdentitiesServer import app
+from Utils.ResourceLocalizer import ResourceLocalizer
 from concurrent import futures
 from syncasync import async_to_sync
 import json
@@ -27,8 +27,8 @@ async def get_blackboard(agent_locations, is_real_system):
 if __name__ == "__main__":
     is_real_system = int(os.environ['IS_REAL_SYSTEM']) == 1
     print(f"Starting {'real' if is_real_system else 'fake'} system. . .")
-    resource_localizer = ResourceLocalizer()
-    with open(resource_localizer.SystemConfigurationFile) as config_file:
+    resource_localizer = ResourceLocalizer("resources.ini")
+    with open(resource_localizer.system_configuration_file) as config_file:
         config = json.loads(config_file.read())
     recognition_agents_config = config['recognition-agents']
     control_agents_config = config['control-agents']

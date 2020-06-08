@@ -1,5 +1,5 @@
-from RecognitionModel import RecognitionModel
 from Services.DirectoryContentVersioner import DirectoryContentVersioner
+from Services.RecognitionModel import RecognitionModel
 from Utils.Singleton import SingletonPerKey
 from os import path, mkdir
 

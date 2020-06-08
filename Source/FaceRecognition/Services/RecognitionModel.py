@@ -1,5 +1,4 @@
-from DatasetHelpers import DatasetHelpers
-from ResourceLocalizer import ResourceLocalizer
+from Utils.DatasetHelpers import DatasetHelpers
 from keras.backend import set_session
 from keras.models import load_model
 from numpy import expand_dims, load, asarray
@@ -14,16 +13,20 @@ import tensorflow as tf
 
 class RecognitionModel:
 
-    def __init__(self, normalize, encode_labels, model_type='knn'):
-        self.__resource_localizer = ResourceLocalizer()
+    def __init__(self, normalize, encode_labels, facenet_model_path, model_type='knn'):
         session = tf.Session()
         graph = tf.get_default_graph()
         set_session(session)
-        self.__embeddings_model = load_model(self.__resource_localizer.FaceNetModel)
+        self.__embeddings_model = load_model(facenet_model_path)
         self.__embeddings_model._make_predict_function()
         self.__graph = graph
         self.__session = session
         self.__model_type = model_type
+        self.__train_input = None
+        self.__test_input = None
+        self.__train_output = None
+        self.__test_output = None
+        self.__neighbors = None
         if model_type == 'knn':
             self.__classification_model = KNeighborsClassifier(n_jobs=-1)
         elif model_type == 'svm':
@@ -48,6 +51,10 @@ class RecognitionModel:
     def load_data_from_directory(self, dataset_path, append=False):
         numeric_labels = self.__output_encoder is None
         data = DatasetHelpers.load_datasets(dataset_path, numeric_labels=numeric_labels)
+        self.load_data(data, append)
+
+    def load_data(self, data, append=False):
+        numeric_labels = self.__output_encoder is None
         if append:
             if numeric_labels:
                 label_offset = self.__train_output[-1]
@@ -115,11 +122,11 @@ class RecognitionModel:
 
     @staticmethod
     def load_model_from_binary(path_to_binary):
-        with open(path_to_binary, "rb") as input:
+        with open(path_to_binary, "rb") as model_bytes:
             session = tf.Session()
             graph = tf.get_default_graph()
             set_session(session)
-            model = pickle.load(input)
+            model = pickle.load(model_bytes)
             model.__embeddings_model._make_predict_function()
             model.__graph = graph
             model.__session = session
@@ -128,13 +135,13 @@ class RecognitionModel:
     def get_embedding(self, face_image):
         return self.__get_embedding(DatasetHelpers.image_to_pixels_array(face_image, (160, 160)))
 
-    def __transform_data(self, input, output, mode='test'):
-        input = self.__input_normalizer.transform(input) if self.__input_normalizer else input
+    def __transform_data(self, input_data, output_data, mode='test'):
+        input_data = self.__input_normalizer.transform(input_data) if self.__input_normalizer else input_data
         if self.__output_encoder:
             if mode == 'train':
-                self.__output_encoder.fit(output)
-            output = self.__output_encoder.transform(output)
-        return input, output
+                self.__output_encoder.fit(output_data)
+            output_data = self.__output_encoder.transform(output_data)
+        return input_data, output_data
 
     def __get_embedding(self, face_pixels):
         face_pixels = face_pixels.astype('float32')
@@ -146,10 +153,10 @@ class RecognitionModel:
             embedding = self.__embeddings_model.predict(samples)
         return embedding[0]
 
-    def __get_embedded_dataset(self, input):
+    def __get_embedded_dataset(self, input_data):
         embedded_input = []
 
-        for face_pixels in input:
+        for face_pixels in input_data:
             embedding = self.__get_embedding(face_pixels)
             embedded_input.append(embedding)
         embedded_input = asarray(embedded_input)
