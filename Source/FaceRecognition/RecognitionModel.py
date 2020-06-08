@@ -46,13 +46,17 @@ class RecognitionModel:
             self.__test_input = self.__get_embedded_dataset(self.__test_input)
 
     def load_data_from_directory(self, dataset_path, append=False):
-        data = DatasetHelpers.load_datasets(dataset_path)
+        numeric_labels = self.__output_encoder is None
+        data = DatasetHelpers.load_datasets(dataset_path, numeric_labels=numeric_labels)
         if append:
-            label_offset = self.__train_output[-1]
+            if numeric_labels:
+                label_offset = self.__train_output[-1]
+                data[0][1] += label_offset
+                data[1][1] += label_offset
             self.__train_input = np.concatenate((self.__train_input, self.__get_embedded_dataset(data[0][0])))
             self.__test_input = np.concatenate((self.__test_input, self.__get_embedded_dataset(data[1][0])))
-            self.__train_output = np.concatenate((self.__train_output, data[0][1] + label_offset))
-            self.__test_output = np.concatenate((self.__test_output, data[1][1] + label_offset))
+            self.__train_output = np.concatenate((self.__train_output, data[0][1]))
+            self.__test_output = np.concatenate((self.__test_output, data[1][1]))
         else:
             self.__train_input, self.__train_output = data[0][0], data[0][1]
             self.__test_input, self.__test_output = data[1][0], data[1][1]
@@ -124,10 +128,11 @@ class RecognitionModel:
     def get_embedding(self, face_image):
         return self.__get_embedding(DatasetHelpers.image_to_pixels_array(face_image, (160, 160)))
 
-    def __transform_data(self, input, output):
+    def __transform_data(self, input, output, mode='test'):
         input = self.__input_normalizer.transform(input) if self.__input_normalizer else input
         if self.__output_encoder:
-            self.__output_encoder.fit(output)
+            if mode == 'train':
+                self.__output_encoder.fit(output)
             output = self.__output_encoder.transform(output)
         return input, output
 
@@ -159,14 +164,17 @@ class RecognitionModel:
         prediction_probabilities = self.__classification_model.predict_proba(faces_embeddings_list)
         predictions = []
         for instance in prediction_probabilities:
-            predicted_class = np.argmax(instance) + 1
-            predictions.append((predicted_class, instance[predicted_class - 1]))
+            predicted_class = np.argmax(instance)
+            predicted_class_probability = instance[predicted_class]
+            if self.__output_encoder:
+                predicted_class = self.__output_encoder.inverse_transform([predicted_class])[0]
+            predictions.append((predicted_class, predicted_class_probability))
         return predictions
 
     def __train(self, neighbors=-1, transform_data=True):
         train_input, train_output = self.__train_input, self.__train_output
         if transform_data:
-            train_input, train_output = self.__transform_data(train_input, train_output)
+            train_input, train_output = self.__transform_data(train_input, train_output, mode='train')
         if neighbors != -1:
             self.__classification_model.set_params(n_neighbors=neighbors)
         self.__classification_model.fit(train_input, train_output)

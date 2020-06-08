@@ -91,7 +91,7 @@ class DatasetHelpers:
         return images
 
     @staticmethod
-    def load_single_dataset(directory, split_chunks=1):
+    def load_single_dataset(directory, split_chunks=1, numeric_labels=True):
         loaded_dataset = []
         dataset_dir = sorted(listdir(directory))
         dataset_size = len(dataset_dir)
@@ -106,7 +106,7 @@ class DatasetHelpers:
                 if not isdir(path):
                     continue
                 faces = DatasetHelpers.load_images(path, as_array=True)
-                labels = [i] * len(faces)
+                labels = [i if numeric_labels else subdir] * len(faces)
                 input_data.extend(faces)
                 output_data.extend(labels)
                 i += 1
@@ -116,8 +116,9 @@ class DatasetHelpers:
         return loaded_dataset[0] if split_chunks == 1 else loaded_dataset
 
     @staticmethod
-    def load_datasets(datasets_directory, split_chunks=1):
+    def load_datasets(datasets_directory, split_chunks=1, numeric_labels=True):
         datasets = []
         for directory in listdir(datasets_directory):
-            datasets.append(DatasetHelpers.load_single_dataset(datasets_directory + "/" + directory, split_chunks))
+            datasets.append(DatasetHelpers.load_single_dataset(datasets_directory + "/" + directory,
+                                                               split_chunks, numeric_labels))
         return datasets
