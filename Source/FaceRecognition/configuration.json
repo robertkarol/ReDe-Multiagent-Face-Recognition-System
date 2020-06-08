@@ -8,7 +8,7 @@
       "polling-interval" : 1,
       "message-checking-interval" : 10,
       "location-to-serve" : "Arad",
-      "model-basename" : "partial2",
+      "model-basename" : "partial1",
       "model-directory" : "./locals"
     },
     {
@@ -83,11 +83,11 @@
   "max-recognition-workers-count" : 8,
   "max-interface-server-workers-count" : 4,
   "interface-server-location" : {
-    "ip" : "127.0.0.1",
-    "port" : 8888
+    "ip" : "10.113.0.190",
+    "port" : 8889
   },
   "register-server-location" : {
-    "ip" : "127.0.0.1",
+    "ip" : "10.113.0.190",
     "port" : 5000
   }
 }

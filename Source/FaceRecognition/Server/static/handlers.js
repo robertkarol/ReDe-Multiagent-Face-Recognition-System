@@ -60,7 +60,7 @@ function validateForm() {
 function uploadFiles() {
     let name = $("#name").val().toLowerCase().replace(" ", "_");
     let location = $("#location").val();
-    let url = "http://127.0.0.1:5000/register/" + location + "/" + name;
+    let url = `${window.location.href}/${location}/${name}`;
     let formData = new FormData();
     allFiles.forEach((file, index) => {
         formData.append("file" + index, file);
