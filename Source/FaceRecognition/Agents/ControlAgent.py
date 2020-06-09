@@ -18,21 +18,21 @@ class ControlAgent(SystemAgent):
             self.__outer_ref: ControlAgent = outer_ref
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting monitoring results . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting monitoring results . . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} polling for results. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} polling for results. . .", "info")
             results = await self.__outer_ref.blackboard.get_recognition_results(self.__outer_ref.processing_batch_size)
             if len(results) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
-                print(f"{self.__outer_ref.jid} starting resolving results. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} starting processing results. . .", "info")
                 await self.__outer_ref.loop.run_in_executor(
                     None, lambda: self.__outer_ref.interface_server.enqueue_responses(self.__wrap_results(results)))
-                print(f"{self.__outer_ref.jid} done resolving results. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} done processing results. . .", "info")
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending monitoring results. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending monitoring results. . .", "info")
 
         def __wrap_results(self, results):
             for result in results:
@@ -59,33 +59,33 @@ class ControlAgent(SystemAgent):
             self.__outer_ref: ControlAgent = outer_ref
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting monitoring requests. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting monitoring requests. . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} waiting for requests. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} waiting for requests. . .", "info")
             requests = await self.__outer_ref.loop.run_in_executor(
                 None, lambda: self.__outer_ref.interface_server.dequeue_requests(
                     self.__outer_ref.processing_batch_size))
             if len(requests) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
             else:
-                print(f"{self.__outer_ref.jid} starting resolving requests. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} starting resolving requests. . .", "info")
                 for request in requests:
                     try:
                         self.__build_request(request)
                     except JSONDecodeError as error:
-                        print(f"Error decoding JSON: {error}")
+                        self.__outer_ref.log(f"Error decoding JSON: {error}", "error")
                         continue
                     await self.__outer_ref.blackboard.publish_recognition_request(
                         request.recognition_request.detection_location, request)
-                print(f"{self.__outer_ref.jid} done resolving requests. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} done resolving requests. . .", "info")
 
         def __build_request(self, request):
             request.recognition_request: RecognitionRequest = \
                 RecognitionRequest.deserialize(request.recognition_request)
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending monitoring requests. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending monitoring requests. . .", "info")
 
     class LoadManagementBehavior(PeriodicBehaviour):
         def __init__(self, outer_ref, period):
@@ -93,10 +93,10 @@ class ControlAgent(SystemAgent):
             self.__outer_ref: ControlAgent = outer_ref
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting managing load. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting managing load. . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} checking load. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} checking load. . .", "info")
             load_info = self.__outer_ref.blackboard.get_load_information()
             for location in load_info:
                 if location == 'results':
@@ -108,10 +108,10 @@ class ControlAgent(SystemAgent):
                     continue
                 running_agents_count = await self.__balance_number_of_agents(agents, load_factor)
                 if running_agents_count > agents_count:
-                    print(f"Added {running_agents_count - agents_count} agents for {location}")
+                    self.__outer_ref.log(f"Added {running_agents_count - agents_count} agents for {location}", "info")
                 elif running_agents_count < agents_count:
-                    print(f"Removed {agents_count - running_agents_count} agents for {location}")
-            print(f"{self.__outer_ref.jid} done checking load. . .")
+                    self.__outer_ref.log(f"Removed {agents_count - running_agents_count} agents for {location}", "info")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} done checking load. . .", "info")
 
         async def __balance_number_of_agents(self, agents, load_factor):
             no_of_agents = len(agents)
@@ -133,7 +133,7 @@ class ControlAgent(SystemAgent):
             return no_of_agents
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending managing load . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending managing load . .", "info")
 
     def __init__(self, jid: str, password: str, blackboard: RecognitionBlackboard, interface_server: InterfaceServer,
                  executor: ThreadPoolExecutor, recognition_locations_manager, processing_batch_size: int = 10,
@@ -188,7 +188,6 @@ class ControlAgent(SystemAgent):
         return self.__load_check_period
 
     async def setup(self):
-        print(f"Agent {self.jid} starting . . .")
         await super().setup()
         res_behavior = self.RecognitionResultsMonitoringBehavior(self)
         req_behavior = self.RecognitionRequestsMonitoringBehavior(self)
@@ -198,4 +197,4 @@ class ControlAgent(SystemAgent):
             load_behavior = self.LoadManagementBehavior(self, self.load_check_period)
             self.add_behaviour(load_behavior)
         else:
-            print(f"Agent {self.jid} skipping load balancing . . .")
+            self.log(f"{self.jid} skipping load balancing . . .", "info")

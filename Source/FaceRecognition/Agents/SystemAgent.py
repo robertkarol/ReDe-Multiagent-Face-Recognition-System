@@ -1,27 +1,28 @@
+from Utils.LoggingMixin import LoggingMixin
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 
 
-class SystemAgent(Agent):
+class SystemAgent(Agent, LoggingMixin):
     class MessageReceiverBehavior(CyclicBehaviour):
         def __init__(self, outer_ref):
             super().__init__()
             self.__outer_ref: SystemAgent = outer_ref
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting the message receiver. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting the message receiver. . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} checking for message. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} checking for message. . .", "info")
             message = await self.receive(self.__outer_ref.message_checking_interval)
             if message:
-                print(f"{self.__outer_ref.jid} processing message. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} processing message. . .", "info")
                 await self.__outer_ref._process_message(message)
-                print(f"{self.__outer_ref.jid} done processing message. . .")
+                self.__outer_ref.log(f"{self.__outer_ref.jid} done processing message. . .", "info")
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending the message receiver. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending the message receiver. . .", "info")
 
     async def _process_message(self, message: Message):
         pass
@@ -37,8 +38,16 @@ class SystemAgent(Agent):
         self.__message_checking_interval = message_checking_interval
 
     async def setup(self):
+        self.log(f"{self.jid} agent starting . . .", "info")
         if self.message_checking_interval > -1:
             msg_behavior = self.MessageReceiverBehavior(self)
             self.add_behaviour(msg_behavior)
         else:
-            print(f"Agent {self.jid} skipping message checking . . .")
+            self.log(f"{self.jid} skipping message checking . . .", "info")
+
+    def log(self, message, level):
+        try:
+            log_method = getattr(self.logger, level)
+            log_method(message)
+        except AttributeError:
+            raise ValueError(f"{level} is not a valid logging level")

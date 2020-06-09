@@ -1,5 +1,6 @@
 from Domain.DTO import RecognitionRequestDTO
 from Server.ConnectionManager import ConnectionManager
+from Utils.LoggingMixin import LoggingMixin
 from concurrent import futures
 from typing import Iterable
 import asyncio
@@ -7,7 +8,7 @@ import multiprocessing
 import queue
 
 
-class InterfaceServer(multiprocessing.Process):
+class InterfaceServer(multiprocessing.Process, LoggingMixin):
     def __init__(self, requests: multiprocessing.Queue, responses: multiprocessing.Queue,
                  ip: str, port: int, max_threads_count: int = 4):
         super().__init__()
@@ -46,7 +47,7 @@ class InterfaceServer(multiprocessing.Process):
             asyncio.ensure_future(self.__start_requests_server())
             self.__loop.run_forever()
         except Exception as err:
-            print(f"Fatal or uncaught server error: {err}")
+            self.logger.fatal(f"Fatal or uncaught server error: {err}")
         finally:
             self.__loop.close()
 
@@ -58,21 +59,21 @@ class InterfaceServer(multiprocessing.Process):
 
     async def __requests_handler(self, reader, writer):
         current_conn = self.__connection_manager.register_connection(reader, writer)
-        print("Processing requests...")
+        self.logger.info("Processing requests...")
         while not self.__stop:
             try:
                 data = await current_conn.read_data()
             except ConnectionError as err:
-                print(f"{current_conn.connection_id} encountered error {err}")
+                self.logger.error(f"{current_conn.connection_id} encountered error {err}")
                 break
             if not data:
                 break
             self.__requests.put(RecognitionRequestDTO(current_conn.connection_id, data))
         self.__connection_manager.unregister_connection(current_conn.connection_id)
-        print("Ending processing requests...")
+        self.logger.info("Ending processing requests...")
 
     async def __responses_handler(self):
-        print("Processing responses...")
+        self.logger.info("Processing responses...")
         while not self.__stop:
             response = await self.__loop.run_in_executor(None, lambda: self.__responses.get())
             current_conn, message = response.connection_id, response.recognition_result
@@ -80,10 +81,10 @@ class InterfaceServer(multiprocessing.Process):
                 message = message.encode()
             try:
                 await self.__connection_manager.get_connection(current_conn).write_data(message)
-                print(f"Sent: {message}")
+                self.logger.info(f"Sent: {message}")
             except ConnectionError as err:
-                print(f"Connection with id {current_conn} encountered error {err}")
-        print("Ending processing responses...")
+                self.logger.error(f"Connection with id {current_conn} encountered error {err}")
+        self.logger.info("Ending processing responses...")
 
     def kill(self):
         super().kill()

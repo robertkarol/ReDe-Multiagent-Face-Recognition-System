@@ -14,10 +14,10 @@ class RetrainAgent(SystemAgent):
             self.__outer_ref: RetrainAgent = outer_ref
 
         async def on_start(self):
-            print(f"{self.__outer_ref.jid} starting the monitoring . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting the monitoring . . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} starting retrain. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting retrain. . .", "info")
             locations = self.__outer_ref.recognition_locations_manager.get_recognition_locations()
             for location in locations:
                 try:
@@ -34,10 +34,10 @@ class RetrainAgent(SystemAgent):
                     None, lambda: self.__retrain(agents_for_location, new_ident_path))
                 await self.__send_new_model_available_message(
                     updated_agent_model_pairs)
-            print(f"{self.__outer_ref.jid} done retrain . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} done retrain . . .", "info")
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending the monitoring . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending the monitoring . . .", "info")
 
         def __retrain(self, agents_for_location, dataset_path) -> list:
             updated_models = []
@@ -82,7 +82,6 @@ class RetrainAgent(SystemAgent):
         return self.__new_identities_manager
 
     async def setup(self):
-        print(f"Agent {self.jid} starting . . .")
         await super().setup()
         retrain_behavior = self.ModelRetrainBehavior(self, self.period)
         self.add_behaviour(retrain_behavior)

@@ -28,18 +28,18 @@ class RecognitionAgent(SystemAgent):
             try:
                 self.__outer_ref.model = await self.__outer_ref.load_model()
             except Exception as err:
-                print(f"Fatal exception loading model: {err}")
+                self.__outer_ref.log(f"Fatal exception loading model: {err}", "critical")
                 self.kill()
-            print(f"{self.__outer_ref.jid} starting the monitoring . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting the monitoring . . .", "info")
 
         async def run(self):
-            print(f"{self.__outer_ref.jid} polling. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} polling. . .", "info")
             data = await self.__outer_ref.blackboard.get_recognition_requests(
                 self.__outer_ref.location_to_serve, self.__outer_ref.processing_batch_size)
             if len(data) == 0:
                 await asyncio.sleep(self.__outer_ref.polling_interval)
                 return
-            print(f"{self.__outer_ref.jid} starting resolving. . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} starting resolving. . .", "info")
             requesting_agents, faces = self.__unwrap_requests(data)
             try:
                 results = await self.__outer_ref.loop.run_in_executor(
@@ -47,11 +47,11 @@ class RecognitionAgent(SystemAgent):
                 await self.__outer_ref.blackboard.publish_recognition_results(
                     self.__wrap_results(requesting_agents, results))
             except Exception as err:
-                print(f"Exception encountered on model prediction: {err}")
-            print(f"{self.__outer_ref.jid} done resolving . . .")
+                self.__outer_ref.log(f"Exception encountered on model prediction: {err}", "error")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} done resolving . . .", "info")
 
         async def on_end(self):
-            print(f"{self.__outer_ref.jid} ending the monitoring . . .")
+            self.__outer_ref.log(f"{self.__outer_ref.jid} ending the monitoring . . .", "info")
 
         def __unwrap_requests(self, requests):
             agents = []
@@ -69,7 +69,7 @@ class RecognitionAgent(SystemAgent):
                 try:
                     faces.append(Image.open(serialized_image))
                 except UnidentifiedImageError as error:
-                    print(f"Error opening image: {error}")
+                    self.__outer_ref.log(f"Error opening image: {error}", "error")
             return agents, faces
 
         def __wrap_results(self, agents, raw_results):
@@ -125,15 +125,14 @@ class RecognitionAgent(SystemAgent):
         self.__model = value
 
     async def setup(self):
-        print(f"Agent {self.jid} starting . . .")
         await super().setup()
         rec_behavior = self.MonitoringRecognitionRequestsBehavior(self)
         self.add_behaviour(rec_behavior)
 
     async def load_model(self):
-        print(f"{self.jid} loading model {self.model_basename} . . .")
+        self.log(f"{self.jid} loading model {self.model_basename} . . .", "info")
         model = await self.loop.run_in_executor(None, lambda: self.__model_manager.get_model(self.model_basename))
-        print(f"{self.jid} done loading model {self.model_basename} . . .")
+        self.log(f"{self.jid} done loading model {self.model_basename} . . .", "info")
         return model
 
     async def _process_message(self, message: Message):
