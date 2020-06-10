@@ -72,7 +72,7 @@ class DatasetHelpers:
         try:
             image = image.convert('RGB')
         except AttributeError:
-            print("LIBRARY BUG ENCOUNTERED")  # TODO: tackle this shit or file them a bug...
+            print("LIBRARY BUG ENCOUNTERED")
         if required_size:
             image = image.resize(required_size)
         return asarray(image)
