@@ -63,7 +63,8 @@ class FakeDetectionAgent(SystemAgent):
                 data = await self.__outer_ref._connection.read_data()
                 if not data:
                     self.kill()
-                print(f'Received: {RecognitionResponse.deserialize(data)!r}')
+                self.__outer_ref.log(f"{self.__outer_ref.jid} received: "
+                                     f"{RecognitionResponse.deserialize(data)!r}", "info")
             except ConnectionError as error:
                 self.__outer_ref.log(f"Error reading from connection: {error}", "critical")
                 self.__outer_ref.stop()
