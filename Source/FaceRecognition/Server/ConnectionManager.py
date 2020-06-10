@@ -1,5 +1,5 @@
-from Server.Connection import Connection
-from Server.MockConnection import MockConnection
+from Domain.Connection import Connection
+from Domain.MockConnection import MockConnection
 from Utils.StringUtils import get_random_alphanumeric_string
 
 
