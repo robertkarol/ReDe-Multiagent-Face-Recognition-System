@@ -8,16 +8,11 @@ from Server.InterfaceServer import InterfaceServer
 from Server.RegisterIdentitiesServer import app
 from Utils.LoggingMixin import LoggingMixin
 from Utils.ResourceLocalizer import ResourceLocalizer
+from Utils.SystemUtils import start_components, is_real_system
 from concurrent import futures
 from syncasync import async_to_sync
 import json
 import multiprocessing
-import os
-
-
-def start_components(components):
-    for component in components:
-        component.start()
 
 
 @async_to_sync
@@ -26,11 +21,11 @@ async def get_blackboard(agent_locations, is_real_system):
         if is_real_system else await MockRecognitionBlackboard(list(agent_locations.keys()))
 
 if __name__ == "__main__":
-    is_real_system = int(os.environ['IS_REAL_SYSTEM']) == 1
+    real_system = is_real_system()
     logger = LoggingMixin().logger
-    logger.debug(f"Starting {'real' if is_real_system else 'fake'} system. . .")
+    logger.debug(f"Starting {'real' if real_system else 'fake'} system. . .")
     resource_localizer = ResourceLocalizer("resources.ini")
-    with open(resource_localizer.system_configuration_file) as config_file:
+    with open(resource_localizer.recognition_system_configuration_file) as config_file:
         config = json.loads(config_file.read())
     recognition_agents_config = config['recognition-agents']
     control_agents_config = config['control-agents']
@@ -47,7 +42,7 @@ if __name__ == "__main__":
     for agent in recognition_agents_config:
         agent_locations[agent['location-to-serve']] = []
 
-    blackboard = get_blackboard(agent_locations, is_real_system)
+    blackboard = get_blackboard(agent_locations, real_system)
 
     recognition_agents = []
     for agent in recognition_agents_config:

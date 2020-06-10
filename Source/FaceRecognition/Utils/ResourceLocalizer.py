@@ -12,5 +12,9 @@ class ResourceLocalizer(metaclass=SingletonMeta):
         return self.__parser['MODELS']['FACENET_MODEL']
 
     @property
-    def system_configuration_file(self):
-        return self.__parser['SYSTEM']['CONFIGURATION_FILE']
+    def recognition_system_configuration_file(self):
+        return self.__parser['RECOGNITION_SYSTEM']['CONFIGURATION_FILE']
+
+    @property
+    def detection_system_configuration_file(self):
+        return self.__parser['DETECTION_SYSTEM']['CONFIGURATION_FILE']

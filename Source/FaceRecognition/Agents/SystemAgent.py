@@ -34,7 +34,8 @@ class SystemAgent(Agent, LoggingMixin):
     def __init__(self, jid: str, password: str, executor, verify_security: bool = False,
                  message_checking_interval: int = 5):
         super().__init__(jid, password, verify_security)
-        self.loop.set_default_executor(executor)
+        if executor:
+            self.loop.set_default_executor(executor)
         self.__message_checking_interval = message_checking_interval
 
     async def setup(self):

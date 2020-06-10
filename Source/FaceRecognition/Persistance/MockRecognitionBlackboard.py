@@ -1,7 +1,7 @@
 from Domain.DTO import RecognitionRequestDTO
+from Domain.MockConnection import MockConnection
 from Domain.RecognitionRequest import RecognitionRequest
 from Persistance.RecognitionBlackboard import RecognitionBlackboard
-from Server.MockConnection import MockConnection
 from Utils.DatasetHelpers import DatasetHelpers
 from asyncinit import asyncinit
 import codecs
