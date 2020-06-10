@@ -17,8 +17,8 @@ if __name__ == "__main__":
     fake_detection_agents = [
         FakeDetectionAgent(f"{agent['agent-name']}@{agent['agent-server']}",
                            agent['agent-password'],
-                           agent['data-directory'],
                            agent['agent-location'],
+                           agent['data-directory'],
                            None,
                            agent['recognition-system-ip'],
                            agent['recognition-system-port'],

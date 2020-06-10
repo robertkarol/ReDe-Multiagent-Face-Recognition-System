@@ -16,7 +16,11 @@ class FakeDetectionAgent(SystemAgent):
         def __init__(self, outer_ref, period):
             super().__init__(period=period)
             self.__outer_ref: FakeDetectionAgent = outer_ref
-            self.__face_images = DatasetHelpers.load_images(self.__outer_ref.data_directory)
+            try:
+                self.__face_images = DatasetHelpers.load_images(self.__outer_ref.data_directory)
+            except FileNotFoundError as error:
+                self.__outer_ref.log(f"Error loading files: {error}", "critical")
+                self.__outer_ref.stop()
 
         async def on_start(self):
             self.__outer_ref.log(f"{self.__outer_ref.jid} starting fake detection. . .", "info")
@@ -30,7 +34,7 @@ class FakeDetectionAgent(SystemAgent):
             try:
                 await self.__outer_ref._connection.write_data(data)
             except ConnectionError as error:
-                self.__outer_ref.log(f"Error reading from connection: {error}", "error")
+                self.__outer_ref.log(f"Error reading from connection: {error}", "critical")
                 self.__outer_ref.stop()
             self.__outer_ref.log(f"{self.__outer_ref.jid} done sending face image . . .", "info")
 
@@ -61,7 +65,7 @@ class FakeDetectionAgent(SystemAgent):
                     self.kill()
                 print(f'Received: {RecognitionResponse.deserialize(data)!r}')
             except ConnectionError as error:
-                self.__outer_ref.log(f"Error reading from connection: {error}", "error")
+                self.__outer_ref.log(f"Error reading from connection: {error}", "critical")
                 self.__outer_ref.stop()
             self.__outer_ref.log(f"{self.__outer_ref.jid} done processing response . . .", "info")
 
