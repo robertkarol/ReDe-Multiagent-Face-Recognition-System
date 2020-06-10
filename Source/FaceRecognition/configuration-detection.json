@@ -1,0 +1,16 @@
+{
+  "fake-detection-agents" : [
+    {
+      "agent-name" : "robertkarol-det1",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "agent-processing-batch-size" : 4,
+      "detection-interval" : 1,
+      "message-checking-interval" : -1,
+      "agent-location" : "Arad",
+      "data-directory" : "./locals/retrain/val/robi",
+      "recognition-system-ip" : "127.0.0.1",
+      "recognition-system-port" : 8888
+    }
+  ]
+}
