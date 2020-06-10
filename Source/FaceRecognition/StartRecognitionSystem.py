@@ -25,7 +25,7 @@ if __name__ == "__main__":
     logger = LoggingMixin().logger
     logger.debug(f"Starting {'real' if real_system else 'fake'} system. . .")
     resource_localizer = ResourceLocalizer("resources.ini")
-    with open(resource_localizer.system_configuration_file) as config_file:
+    with open(resource_localizer.recognition_system_configuration_file) as config_file:
         config = json.loads(config_file.read())
     recognition_agents_config = config['recognition-agents']
     control_agents_config = config['control-agents']
