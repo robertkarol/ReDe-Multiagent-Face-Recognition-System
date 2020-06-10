@@ -107,10 +107,11 @@ class ControlAgent(SystemAgent):
                 if agents_count > 0 and not agents[0].model:
                     continue
                 running_agents_count = await self.__balance_number_of_agents(agents, load_factor)
-                if running_agents_count > agents_count:
-                    self.__outer_ref.log(f"Added {running_agents_count - agents_count} agents for {location}", "info")
-                elif running_agents_count < agents_count:
-                    self.__outer_ref.log(f"Removed {agents_count - running_agents_count} agents for {location}", "info")
+                diff_agents = running_agents_count - agents_count
+                if diff_agents > 0:
+                    self.__outer_ref.log(f"Added {diff_agents} agents for {location}", "info")
+                elif diff_agents < 0:
+                    self.__outer_ref.log(f"Removed {-diff_agents} agents for {location}", "info")
             self.__outer_ref.log(f"{self.__outer_ref.jid} done checking load. . .", "info")
 
         async def __balance_number_of_agents(self, agents, load_factor):

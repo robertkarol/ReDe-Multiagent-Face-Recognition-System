@@ -1,4 +1,4 @@
-from Server.Connection import Connection
+from Domain.Connection import Connection
 import asyncio
 
 
