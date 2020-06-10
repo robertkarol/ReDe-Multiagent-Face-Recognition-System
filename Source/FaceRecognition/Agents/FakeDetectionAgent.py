@@ -69,7 +69,7 @@ class FakeDetectionAgent(SystemAgent):
             self.__outer_ref.log(f"{self.__outer_ref.jid} ending responses receiver. . .", "info")
 
     def __init__(self, jid: str, password: str, agent_location: str, data_directory: str, executor: ThreadPoolExecutor,
-                 recognition_system_ip: str, recognition_system_port: int, period: int = 1,
+                 recognition_system_ip: str, recognition_system_port: int, detection_interval: int = 1,
                  message_checking_interval: int = 5, verify_security: bool = False):
         super().__init__(jid, password, executor, verify_security, message_checking_interval)
         self.__agent_location = agent_location
@@ -77,7 +77,7 @@ class FakeDetectionAgent(SystemAgent):
         self.__recognition_system_ip = recognition_system_ip
         self.__recognition_system_port = recognition_system_port
         self._connection: Connection
-        self.__period = period
+        self.__detection_interval = detection_interval
 
     @property
     def agent_location(self):
@@ -88,8 +88,8 @@ class FakeDetectionAgent(SystemAgent):
         return self.__data_directory
 
     @property
-    def period(self):
-        return self.__period
+    def detection_interval(self):
+        return self.__detection_interval
 
     @property
     def recognition_system_ip(self):
@@ -104,7 +104,7 @@ class FakeDetectionAgent(SystemAgent):
         reader_stream, writer_stream = \
             await asyncio.open_connection(self.__recognition_system_ip, self.__recognition_system_port)
         self._connection = Connection(str(self.jid), reader_stream, writer_stream)
-        detection_behavior = self.FakeDetectionBehavior(self, self.period)
+        detection_behavior = self.FakeDetectionBehavior(self, self.detection_interval)
         receiver_behavior = self.ResponseReceiverBehavior(self)
         self.add_behaviour(detection_behavior)
         self.add_behaviour(receiver_behavior)
