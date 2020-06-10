@@ -4,13 +4,45 @@
       "agent-name" : "robertkarol-det1",
       "agent-password" : "MeMeS-4TheWin",
       "agent-server" : "404.city",
-      "agent-processing-batch-size" : 4,
-      "detection-interval" : 1,
+      "detection-interval" : 2,
       "message-checking-interval" : -1,
-      "agent-location" : "Arad",
+      "agent-location" : "Timisoara",
       "data-directory" : "./locals/retrain/val/robi",
-      "recognition-system-ip" : "127.0.0.1",
-      "recognition-system-port" : 8888
+      "recognition-system-ip" : "10.113.0.190",
+      "recognition-system-port" : 8889
+    },
+    {
+      "agent-name" : "robertkarol-det2",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "detection-interval" : 2,
+      "message-checking-interval" : -1,
+      "agent-location" : "Alba Iulia",
+      "data-directory" : "./locals/retrain/val/madonna",
+      "recognition-system-ip" : "10.113.0.190",
+      "recognition-system-port" : 8889
+    },
+    {
+      "agent-name" : "robertkarol-det3",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "detection-interval" : 2,
+      "message-checking-interval" : -1,
+      "agent-location" : "Cluj",
+      "data-directory" : "./locals/retrain/val/jerry_seinfeld",
+      "recognition-system-ip" : "10.113.0.190",
+      "recognition-system-port" : 8889
+    },
+    {
+      "agent-name" : "robertkarol-det4",
+      "agent-password" : "MeMeS-4TheWin",
+      "agent-server" : "404.city",
+      "detection-interval" : 2,
+      "message-checking-interval" : -1,
+      "agent-location" : "Oradea",
+      "data-directory" : "./locals/retrain/val/mindy_kaling",
+      "recognition-system-ip" : "10.113.0.190",
+      "recognition-system-port" : 8889
     }
   ]
 }
