@@ -1,6 +1,6 @@
 from Domain.DTO import RecognitionRequestDTO
 from Server.ConnectionManager import ConnectionManager
-from Utils.LoggingMixin import LoggingMixin
+from Utils.Logging import LoggingMixin
 from concurrent import futures
 from typing import Iterable
 import asyncio

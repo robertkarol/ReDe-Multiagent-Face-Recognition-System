@@ -1,5 +1,5 @@
 from Agents.FakeDetectionAgent import FakeDetectionAgent
-from Utils.LoggingMixin import LoggingMixin
+from Utils.Logging import LoggingMixin
 from Utils.ResourceLocalizer import ResourceLocalizer
 from Utils.SystemUtils import is_real_system, start_components
 import json
@@ -8,7 +8,9 @@ if __name__ == "__main__":
     real_system = is_real_system()
     logger = LoggingMixin().logger
     if real_system:
-        logger.warning(f"Only fake system supported! Starting fake system instead. . .")
+        logger.warning(f"Only fake system supported! Will start fake system instead.")
+    else:
+        logger.debug("Starting fake system. . .")
     resource_localizer = ResourceLocalizer("resources.ini")
     with open(resource_localizer.detection_system_configuration_file) as config_file:
         config = json.loads(config_file.read())

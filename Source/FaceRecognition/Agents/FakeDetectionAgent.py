@@ -34,7 +34,8 @@ class FakeDetectionAgent(SystemAgent):
             try:
                 await self.__outer_ref._connection.write_data(data)
             except ConnectionError as error:
-                self.__outer_ref.log(f"Error reading from connection: {error}", "critical")
+                self.__outer_ref.log(f"Error writing to connection: {error}", "critical")
+                self.kill()
                 self.__outer_ref.stop()
             self.__outer_ref.log(f"{self.__outer_ref.jid} done sending face image . . .", "info")
 
@@ -67,6 +68,7 @@ class FakeDetectionAgent(SystemAgent):
                                      f"{RecognitionResponse.deserialize(data)!r}", "info")
             except ConnectionError as error:
                 self.__outer_ref.log(f"Error reading from connection: {error}", "critical")
+                self.kill()
                 self.__outer_ref.stop()
             self.__outer_ref.log(f"{self.__outer_ref.jid} done processing response . . .", "info")
 

@@ -1,4 +1,4 @@
-from Utils.LoggingMixin import LoggingMixin
+from Utils.Logging import LoggingMixin
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message

@@ -6,7 +6,7 @@ from Persistance.RecognitionBlackboard import RecognitionBlackboard
 from Services.RecognitionLocationsManager import RecognitionLocationsManager
 from Server.InterfaceServer import InterfaceServer
 from Server.RegisterIdentitiesServer import app
-from Utils.LoggingMixin import LoggingMixin
+from Utils.Logging import LoggingMixin
 from Utils.ResourceLocalizer import ResourceLocalizer
 from Utils.SystemUtils import start_components, is_real_system
 from concurrent import futures
