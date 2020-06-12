@@ -7,7 +7,6 @@ from typing import Iterable
 
 
 class NewIdentitiesManager(SingletonPerKey):
-
     def __new__(cls, *args, **kwargs):
         data_directory = args[0]
         instance = super().__new__(cls, data_directory)

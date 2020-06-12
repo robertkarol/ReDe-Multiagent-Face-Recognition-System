@@ -22,10 +22,8 @@ class RecognitionModel:
         self.__graph = graph
         self.__session = session
         self.__model_type = model_type
-        self.__train_input = None
-        self.__test_input = None
-        self.__train_output = None
-        self.__test_output = None
+        self.__train_input, self.__test_output = None, None
+        self.__test_input, self.__train_output = None, None
         self.__neighbors = None
         if model_type == 'knn':
             self.__classification_model = KNeighborsClassifier(n_jobs=-1)
@@ -98,7 +96,6 @@ class RecognitionModel:
             else:
                 cls = -1
             prediction.append(cls)
-
         return classified_correctly / classified, classified / total_predictions
 
     def predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False):
@@ -155,12 +152,10 @@ class RecognitionModel:
 
     def __get_embedded_dataset(self, input_data):
         embedded_input = []
-
         for face_pixels in input_data:
             embedding = self.__get_embedding(face_pixels)
             embedded_input.append(embedding)
         embedded_input = asarray(embedded_input)
-
         return embedded_input
 
     def __predict_from_faces_embeddings(self, faces_embeddings_list, is_array=False, transform_data=True):

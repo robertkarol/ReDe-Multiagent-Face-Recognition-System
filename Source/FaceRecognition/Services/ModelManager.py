@@ -5,7 +5,6 @@ from os import path, mkdir
 
 
 class ModelManager(SingletonPerKey):
-
     def __new__(cls, *args, **kwargs):
         model_directory = args[0]
         instance = super().__new__(cls, model_directory)

@@ -10,7 +10,6 @@ def notify_event(func):
         async with self._event:
             self._event.notify_all()
         return res
-
     return wrapper
 
 
