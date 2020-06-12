@@ -29,7 +29,8 @@ class FakeDetectionAgent(SystemAgent):
             self.__outer_ref.log(f"{self.__outer_ref.jid} sending face image. . .", "info")
             image = self.__get_random_face_image()
             request = RecognitionRequest(str(self.__outer_ref.jid), self.__outer_ref.agent_location,
-                                         self.__image_to_base64(image), False, base64encoded=True)
+                                         self.__image_to_base64(image), self.__outer_ref.generate_outcome,
+                                         base64encoded=True)
             data = str.encode(RecognitionRequest.serialize(request))
             try:
                 await self.__outer_ref._connection.write_data(data)
@@ -77,14 +78,15 @@ class FakeDetectionAgent(SystemAgent):
 
     def __init__(self, jid: str, password: str, agent_location: str, data_directory: str, executor: ThreadPoolExecutor,
                  recognition_system_ip: str, recognition_system_port: int, detection_interval: int = 1,
-                 message_checking_interval: int = 5, verify_security: bool = False):
+                 generate_outcome: bool = False, message_checking_interval: int = 5, verify_security: bool = False):
         super().__init__(jid, password, executor, verify_security, message_checking_interval)
         self.__agent_location = agent_location
         self.__data_directory = data_directory
         self.__recognition_system_ip = recognition_system_ip
         self.__recognition_system_port = recognition_system_port
-        self._connection: Connection
         self.__detection_interval = detection_interval
+        self.__generate_outcome = generate_outcome
+        self._connection: Connection
 
     @property
     def agent_location(self):
@@ -97,6 +99,10 @@ class FakeDetectionAgent(SystemAgent):
     @property
     def detection_interval(self):
         return self.__detection_interval
+
+    @property
+    def generate_outcome(self):
+        return self.__generate_outcome
 
     @property
     def recognition_system_ip(self):

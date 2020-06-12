@@ -25,6 +25,7 @@ if __name__ == "__main__":
                            agent['recognition-system-ip'],
                            agent['recognition-system-port'],
                            agent['detection-interval'],
+                           agent['generate-outcome'],
                            agent['message-checking-interval'])
         for agent in fake_detection_agents_config
     ]
