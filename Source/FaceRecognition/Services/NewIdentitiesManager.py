@@ -24,27 +24,17 @@ class NewIdentitiesManager(SingletonPerKey):
     def get_newest_identities_dataset_path(self, location: str) -> (int, str):
         location_dir = self.__get_location_directory(location)
         if not path.isdir(location_dir):
-            raise LookupError(f"No such {location_dir} identities source being versioned")
-
+            raise LookupError(f"No such \"{location_dir}\" identities source being versioned")
         data_dir, version = self.__data_versioner.get_latest(location_dir, location)
         if not data_dir:
             return 0, None
-        try:
-            identities_count = len(listdir(path.join(location_dir, data_dir, 'train')))
-        except FileNotFoundError as e:
-            print(e)
-            return 0, None
-
+        identities_count = len(listdir(path.join(location_dir, data_dir, 'train')))
         if identities_count > 0:
             self.__lock.acquire()
             try:
-                new_data_dir = path.join(location_dir, self.__data_versioner.get_versioned_name(location, version + 1))
-                mkdir(new_data_dir)
-                mkdir(path.join(new_data_dir, 'train'))
-                mkdir(path.join(new_data_dir, 'val'))
+                self.__make_new_data_dir(location, version)
             finally:
                 self.__lock.release()
-
         return identities_count, path.join(location_dir, data_dir)
 
     def publish_identity(self, location: str, name: str, train_data: Iterable, test_data: Iterable) -> None:
@@ -71,3 +61,10 @@ class NewIdentitiesManager(SingletonPerKey):
         if location not in self.__source_locations_manager.get_recognition_locations():
             raise ValueError(f"{location} is not a valid location")
         return path.join(self.__data_directory, location)
+
+    def __make_new_data_dir(self, location, version):
+        location_dir = self.__get_location_directory(location)
+        new_data_dir = path.join(location_dir, self.__data_versioner.get_versioned_name(location, version + 1))
+        mkdir(new_data_dir)
+        mkdir(path.join(new_data_dir, 'train'))
+        mkdir(path.join(new_data_dir, 'val'))

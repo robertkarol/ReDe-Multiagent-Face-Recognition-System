@@ -24,7 +24,9 @@ class RetrainAgent(SystemAgent):
                     new_ident_cnt, new_ident_path = \
                         self.__outer_ref.new_identities_manager.get_newest_identities_dataset_path(
                             location)
-                except LookupError:
+                except (LookupError, FileNotFoundError, ValueError) as error:
+                    self.__outer_ref.log(f"{self.__outer_ref.jid} encountered error looking up dataset: "
+                                         f"{error}", "error")
                     new_ident_cnt = 0
                 if new_ident_cnt == 0:
                     continue
