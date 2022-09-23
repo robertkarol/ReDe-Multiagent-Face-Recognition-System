@@ -5,7 +5,7 @@ keras
 ipython
 jupyter
 six
-protobuf==3.8.0
+protobuf==3.18.3
 wheel
 setuptools==41.0.0
 scikit-learn
