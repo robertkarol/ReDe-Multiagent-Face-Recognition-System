@@ -7,7 +7,7 @@ jupyter
 six
 protobuf==3.8.0
 wheel
-setuptools==41.0.0
+setuptools==65.5.1
 scikit-learn
 configparser
 Pillow
