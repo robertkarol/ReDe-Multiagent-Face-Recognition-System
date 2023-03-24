@@ -1,6 +1,6 @@
 numpy
 scipy
-tensorflow==1.13.2
+tensorflow==2.11.1
 keras
 ipython
 jupyter
